@@ -28,27 +28,6 @@ the saved copy. The first run needs an internet connection. The loader checks
 syntax before saving; a runtime bug in an update still needs correcting or
 reverting in Git.
 
-## Make updates with Git
-
-Edit **dashboard.js** to change the dashboard. Commit and push to **main**; the
-phone picks up the change on a subsequent widget run. GitHub may cache raw files
-for a few minutes, and iOS controls background refresh timing. Running the script
-manually opens Scriptable. There is no silent tap-to-refresh in this setup.
-
-Keep **Dublin Dashboard.js** as the phone loader. Changing the loader itself
-requires replacing that small script on the phone again.
-
-```sh
-git clone https://github.com/sammcentee/dublin-dashboard.git
-cd dublin-dashboard
-# Edit dashboard.js, then:
-git add dashboard.js
-git commit -m "Describe the dashboard change"
-git push origin main
-```
-
-Test locally with Node.js: `node loader.test.mjs` and `node solar.test.mjs`.
-
 ## Licence and credits
 
 Original project code, documentation and banner are [MIT licensed](LICENSE).
@@ -73,14 +52,3 @@ to reuse the whole Yr website. This project does not copy Yr's images or logos.
 
 NTA timetable data is supplied as-is; the NTA is not responsible for errors or
 inaccuracies. No data provider endorses this independent project.
-
-## Reading the widget
-
-The seven-minute Luas allowance starts at Parnell and includes the ride to
-Marlborough and the walk to Abbey Street. It is an estimate, not a guarantee.
-Train rows show departures for today only, strictly after 22:00 from Sallins to
-Heuston and strictly after 18:00 from Connolly to Sallins.
-
-Daylight is calculated locally for Dublin, using civil dawn and dusk (the sun
-at −6°). The scale is a sun-based estimate, not a measurement of cloud cover
-or actual brightness. No daylight API or attribution tap target is needed.
