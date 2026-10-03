@@ -1,6 +1,9 @@
 // Dublin Dashboard — use a LARGE Scriptable widget.
 // Updates automatically when iOS refreshes the widget. No accounts or API keys are required.
-// Sources: Yr, sunrise-sunset.org, NTA/TFI (CC BY 4.0), Irish Rail and TII/Luas (CC BY 4.0).
+// Original project code: MIT License, copyright (c) 2026 Sam McEntee.
+// Data sources and separate licences: https://github.com/sammcentee/dublin-dashboard/blob/main/NOTICE.md
+// Weather: MET Norway / Yr; rail: NTA / TFI and Irish Rail; Luas: TII.
+// Daylight calculations: adapted from SunCalc under BSD-2-Clause; notice retained below.
 const TZ = "Europe/Dublin";
 const YR = "https://www.yr.no/en/forecast/daily-table/2-2964574/Ireland/Leinster/Dublin%20City/Dublin";
 const RAIL_URL = "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip";
@@ -84,15 +87,74 @@ async function weather(now) {
     return old && now.getTime() - old.fetchedAt < 60 * 60000 ? { ...old, stale: true } : null;
   }
 }
+/*
+ * Dublin solar calculations adapted from SunCalc by Volodymyr Agafonkin.
+ * https://github.com/mourner/suncalc/blob/ecb6bb0b0f3a5003298cfb536e46176117caf4e5/index.js
+ * Only solar noon, sunrise/sunset and civil dawn/dusk are retained.
+ * Coordinates are fixed to Dublin; delta-T approximation covers 2005–2050.
+ *
+ * Copyright (c) 2026, Volodymyr Agafonkin
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are
+ * permitted provided that the following conditions are met:
+ *
+ *    1. Redistributions of source code must retain the above copyright notice, this list of
+ *       conditions and the following disclaimer.
+ *
+ *    2. Redistributions in binary form must reproduce the above copyright notice, this list
+ *       of conditions and the following disclaimer in the documentation and/or other materials
+ *       provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+function sunDay(date) {
+  const { PI, sin, cos, asin, acos, atan2, round } = Math;
+  const rad = PI / 180, phi = 53.3498 * rad, lw = 6.2603 * rad;
+  const wrap = a => a - 2 * PI * round(a / (2 * PI));
+  const time = d => new Date((d + 10957.5) * 86400000).toISOString();
+  function coords(d) {
+    const year = d / 365.2425;
+    const t = (d + (62.92 + year * (0.32217 + year * 0.005589)) / 86400) / 36525;
+    const m = rad * (357.52911 + t * (35999.05029 - t * 0.0001537));
+    const sm = sin(m), cm = cos(m), om = rad * (125.04 - 1934.136 * t);
+    const c = rad * ((1.914602 - t * (0.004817 + t * 0.000014)) * sm + (0.019993 - 0.000101 * t) * 2 * sm * cm + 0.000289 * sm * (3 - 4 * sm * sm));
+    const l = rad * (280.46646 + t * (36000.76983 + t * 0.0003032)) + c - rad * (0.00569 + 0.00478 * sin(om));
+    const e = rad * (23.439291 - t * (0.0130042 + t * (0.00000016 - t * 0.000000504))) + rad * 0.00256 * cos(om);
+    return { ra: atan2(cos(e) * sin(l), cos(l)), dec: asin(sin(e) * sin(l)) };
+  }
+  const sidereal = d => rad * (280.46061837 + 360.98564736629 * d) - lw;
+  const anchor = new Date(date + "T12:00:00Z").getTime() / 86400000 - 10957.5;
+  const lon = 0.0009 + lw / (2 * PI);
+  let noon = round(anchor - lon) + lon;
+  for (let i = 0; i < 3; i++) noon -= wrap(sidereal(noon) - coords(noon).ra) / (2 * PI);
+  const declination = coords(noon).dec;
+  function crossing(degrees, sign) {
+    const target = degrees * rad;
+    let d = noon + sign * acos((sin(target) - sin(phi) * sin(declination)) / (cos(phi) * cos(declination))) / (2 * PI);
+    for (let i = 0; i < 2; i++) {
+      const c = coords(d), h = wrap(sidereal(d) - c.ra);
+      const altitude = asin(sin(phi) * sin(c.dec) + cos(phi) * cos(c.dec) * cos(h));
+      d += (altitude - target) / (2 * PI * cos(phi) * cos(c.dec) * sin(h));
+    }
+    return time(d);
+  }
+  return {
+    date, solar_noon: time(noon), sunrise: crossing(-0.833, -1), sunset: crossing(-0.833, 1),
+    civil_twilight_begin: crossing(-6, -1), civil_twilight_end: crossing(-6, 1)
+  };
+}
 async function daylight(now) {
-  const key = dateKey(now), tomorrow = shiftDay(key, 1);
-  const old = readCache("sun");
-  if (old?.days?.some(d => d.date === isoDay(key)) && old.days.some(d => d.date === isoDay(tomorrow))) return old;
-  const url = "https://api.sunrise-sunset.org/v2?lat=53.3498&lng=-6.2603&date_start=" + isoDay(key) + "&date_end=" + isoDay(shiftDay(key, 30)) + "&tz=Europe%2FDublin";
-  const data = await request(url).loadJSON();
-  if (!data.days?.length) throw new Error("Daylight unavailable");
-  saveCache("sun", data);
-  return data;
+  const key = dateKey(now);
+  return { days: [sunDay(isoDay(key)), sunDay(isoDay(shiftDay(key, 1)))] };
 }
 function nextLight(data, now) {
   return data.days.flatMap(d => [
@@ -400,7 +462,7 @@ async function dashboard() {
   w.addSpacer(6);
   text(w, yr ? Math.round(yr.temperature) + "°C  ·  feels " + Math.round(yr.feelsLike) + "°C" : "Yr weather unavailable", 23, "ffffff", true);
   const yrTime = yr?.updatedAt ? " · " + clock(new Date(yr.updatedAt)) : "";
-  text(w, (yr ? (yr.description || "Conditions unavailable") + " · " : "") + "Yr" + yrTime + (yr?.stale ? " · cached" : ""), 11, "9eafc5");
+  text(w, (yr ? (yr.description || "Conditions unavailable") + " · " : "") + "Yr · MET Norway" + yrTime + (yr?.stale ? " · cached" : ""), 11, "9eafc5");
   w.addSpacer(5);
   let event;
   if (sun) {
@@ -434,11 +496,11 @@ async function dashboard() {
   if (messages.length) text(w, [...new Set(messages)].join(" · "), 9, "f8d574");
   w.addSpacer();
   const sources = w.addStack();
-  text(sources, "TFI " + (rail?.data.retrievedAt || "") + (rail?.unverified ? " · unchecked" : ""), 8, "9eafc5");
+  text(sources, "NTA/TFI " + (rail?.data.retrievedAt || "") + (rail?.unverified ? " · unchecked" : ""), 8, "9eafc5");
   sources.addSpacer();
-  text(sources, "Luas" + (usableParnell ? " " + clock(usableParnell.created) : ""), 8, "9eafc5");
+  text(sources, "Irish Rail · TII/Luas" + (usableParnell ? " " + clock(usableParnell.created) : ""), 8, "9eafc5");
   sources.addSpacer();
-  text(sources, "sunrise-sunset.org", 8, "9eafc5");
+  text(sources, "SunCalc", 8, "9eafc5");
   text(w, "Automatic updates · timing controlled by iOS", 8, "9eafc5");
   let refresh = now.getTime() + 2 * 60000;
   if (event) refresh = Math.min(refresh, event.date.getTime() + 1000);

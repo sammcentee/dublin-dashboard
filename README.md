@@ -1,3 +1,13 @@
+<p align="center">
+  <img src="assets/banner.svg" alt="Dublin Dashboard — weather, daylight and the next way home" width="1200">
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/code-MIT-75d5b1?style=flat-square" alt="Code licence: MIT"></a>
+  <a href="https://scriptable.app/"><img src="https://img.shields.io/badge/iPhone-Scriptable-94b3c0?style=flat-square" alt="Built for Scriptable on iPhone"></a>
+  <a href="NOTICE.md"><img src="https://img.shields.io/badge/data-source_credits-efcf80?style=flat-square" alt="Data source credits"></a>
+</p>
+
 # Dublin Dashboard
 
 A large iPhone widget for the free Scriptable app. Shows Dublin weather from Yr,
@@ -37,17 +47,40 @@ git commit -m "Describe the dashboard change"
 git push origin main
 ```
 
-Test the loader locally with Node.js: `node loader.test.mjs`.
+Test locally with Node.js: `node loader.test.mjs` and `node solar.test.mjs`.
 
-## Data sources
+## Licence and credits
 
-Weather: [Yr](https://www.yr.no/en/forecast/daily-table/2-2964574/Ireland/Leinster/Dublin%20City/Dublin).
-Daylight: [Sunrise-Sunset.org](https://sunrise-sunset.org/).
-Rail timetable: [NTA / TFI](https://www.transportforireland.ie/transitData/PT_Data.html), CC BY 4.0.
-Rail predictions: [Irish Rail](https://api.irishrail.ie/realtime/).
-Luas predictions: [Transport Infrastructure Ireland](https://data.gov.ie/dataset/luas-forecasting-api), CC BY 4.0.
+Original project code, documentation and banner are [MIT licensed](LICENSE).
+You can use, modify, share and sell them, provided you keep the licence notice.
+The SunCalc-derived solar calculation is BSD-2-Clause licensed. Third-party
+weather and transport data retain their own terms; see [NOTICE.md](NOTICE.md)
+for providers, source links, licence links and modification notices.
+
+| Information | Credit |
+| --- | --- |
+| Weather | [MET Norway](https://www.met.no/en/free-meteorological-data/Licensing-and-crediting), retrieved from [Yr](https://www.yr.no/en/forecast/daily-table/2-2964574/Ireland/Leinster/Dublin%20City/Dublin), a MET Norway/NRK service; MET data policy offers CC BY 4.0 / NLOD 2.0 |
+| Daylight | Calculated on the phone using an adaptation of [SunCalc](https://github.com/mourner/suncalc), by Volodymyr Agafonkin; BSD-2-Clause |
+| Rail timetable | [National Transport Authority / TFI](https://www.transportforireland.ie/transitData/PT_Data.html); CC BY 4.0 |
+| Rail predictions | [Iarnród Éireann / Irish Rail](https://api.irishrail.ie/realtime/); provider's API terms, with no named licence asserted |
+| Luas predictions | [Transport Infrastructure Ireland](https://data.gov.ie/dataset/luas-forecasting-api); CC BY 4.0 |
+
+The Yr integration reads weather values from its public webpage to preserve
+Yr's displayed feels-like temperature. It is an unofficial integration;
+[Yr's supported data-access guidance](https://hjelp.yr.no/hc/en-us/articles/360001946134-Data-access-and-terms-of-service)
+directs developers to MET's API. MET's data licence does not establish permission
+to reuse the whole Yr website. This project does not copy Yr's images or logos.
+
+NTA timetable data is supplied as-is; the NTA is not responsible for errors or
+inaccuracies. No data provider endorses this independent project.
+
+## Reading the widget
 
 The seven-minute Luas allowance starts at Parnell and includes the ride to
 Marlborough and the walk to Abbey Street. It is an estimate, not a guarantee.
 Train rows show departures for today only, strictly after 22:00 from Sallins to
 Heuston and strictly after 18:00 from Connolly to Sallins.
+
+Daylight is calculated locally for Dublin, using civil dawn and dusk (the sun
+at −6°). The scale is a sun-based estimate, not a measurement of cloud cover
+or actual brightness. No daylight API or attribution tap target is needed.

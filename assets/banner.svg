@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title description">
+  <title id="title">Dublin Dashboard</title>
+  <desc id="description">A navy banner with a golden sun, green and red tram lines, and the words Weather, daylight and the next way home.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1">
+      <stop stop-color="#101c30"/>
+      <stop offset="1" stop-color="#203c4a"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity=".035"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="360" rx="24" fill="url(#background)"/>
+  <rect width="1200" height="360" rx="24" fill="url(#grid)"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif">
+    <text x="64" y="56" fill="#b7cdd3" font-size="12" font-weight="600" letter-spacing="3">SCRIPTABLE / IPHONE</text>
+    <text x="60" y="135" fill="#f7fafc" font-size="68" font-weight="750" letter-spacing="-2">Dublin</text>
+    <text x="60" y="202" fill="#8adcc7" font-size="68" font-weight="750" letter-spacing="-2">Dashboard</text>
+    <text x="64" y="244" fill="#c9d7e1" font-size="20">Weather, daylight and the next way home.</text>
+    <g fill="#c9d7e1" font-size="13">
+      <rect x="64" y="277" width="80" height="30" rx="15" fill="#ffffff" fill-opacity=".07"/>
+      <text x="79" y="297">Weather</text>
+      <rect x="154" y="277" width="80" height="30" rx="15" fill="#ffffff" fill-opacity=".07"/>
+      <text x="170" y="297">Daylight</text>
+      <rect x="244" y="277" width="54" height="30" rx="15" fill="#ffffff" fill-opacity=".07"/>
+      <text x="260" y="297">Rail</text>
+      <rect x="308" y="277" width="60" height="30" rx="15" fill="#ffffff" fill-opacity=".07"/>
+      <text x="324" y="297">Luas</text>
+    </g>
+    <text x="850" y="55" fill="#94b3c0" font-size="12" letter-spacing="2">53.35° N / 6.26° W</text>
+  </g>
+  <circle cx="1042" cy="119" r="52" fill="#efcf80" fill-opacity=".06"/>
+  <circle cx="1042" cy="119" r="35" fill="#efcf80" fill-opacity=".12"/>
+  <circle cx="1042" cy="119" r="21" fill="#efcf80"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M731 320V267Q731 247 751 247H884Q912 247 912 219V112Q912 85 938 85H970" stroke="#75d5b1" stroke-opacity=".12" stroke-width="24"/>
+    <path d="M731 320V267Q731 247 751 247H884Q912 247 912 219V112Q912 85 938 85H970" stroke="#75d5b1" stroke-width="5"/>
+    <path d="M706 169H854Q878 169 895 186L940 231Q957 248 981 248H1129" stroke="#ef9494" stroke-opacity=".12" stroke-width="24"/>
+    <path d="M706 169H854Q878 169 895 186L940 231Q957 248 981 248H1129" stroke="#ef9494" stroke-width="5"/>
+    <g fill="#152638" stroke="#75d5b1" stroke-width="3">
+      <circle cx="731" cy="287" r="7"/>
+      <circle cx="823" cy="247" r="7"/>
+      <circle cx="912" cy="128" r="7"/>
+    </g>
+    <g fill="#152638" stroke="#ef9494" stroke-width="3">
+      <circle cx="768" cy="169" r="7"/>
+      <circle cx="1012" cy="248" r="7"/>
+      <circle cx="1100" cy="248" r="7"/>
+    </g>
+    <circle cx="912" cy="203" r="12" fill="#152638" stroke="#f7fafc" stroke-width="3"/>
+    <circle cx="912" cy="203" r="4" fill="#f7fafc" stroke="none"/>
+  </g>
+</svg>
