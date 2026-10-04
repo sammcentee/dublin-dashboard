@@ -39,23 +39,23 @@ async function results(jobs) {
 function header(widget, label, now, age) {
   const row = widget.addStack();
   row.centerAlignContent();
-  text(row, label, 12, "aeaeb2", true);
+  text(row, label, 10, "aeaeb2", true);
   row.addSpacer();
   const color = api.freshnessColor(age);
-  text(row, "● ", 14, color, true);
+  text(row, "● ", 10, color, true);
   const elapsed = row.addDate(now);
   elapsed.applyTimerStyle();
-  elapsed.font = Font.semiboldMonospacedSystemFont(11);
+  elapsed.font = Font.semiboldMonospacedSystemFont(9);
   elapsed.textColor = new Color(color);
   elapsed.lineLimit = 1;
   elapsed.minimumScaleFactor = 0.75;
-  widget.addSpacer(3);
+  widget.addSpacer(2);
 }
 
 const started = new Date();
 const w = new ListWidget();
 w.backgroundColor = new Color("1c1c1e");
-w.setPadding(8, 9, 8, 9);
+w.setPadding(6, 8, 6, 8);
 let event, green;
 
 if (view === "weather") {
@@ -64,23 +64,23 @@ if (view === "weather") {
   header(w, "Yr", now, yr ? now.getTime() - yr.fetchedAt : Infinity);
   const temperature = w.addStack();
   temperature.centerAlignContent();
-  text(temperature, yr ? Math.round(yr.temperature) + "°" : "Unavailable", yr ? 34 : 17, "f2f2f7", true);
+  text(temperature, yr ? Math.round(yr.temperature) + "°" : "Unavailable", yr ? 22 : 13, "f2f2f7", true);
   if (yr) {
     temperature.addSpacer();
     const feels = temperature.addStack();
     feels.layoutVertically();
-    text(feels, "Feels like", 10, "aeaeb2");
-    text(feels, Math.round(yr.feelsLike) + "°", 16, "aeaeb2", true);
-    text(w, yr.description || "Conditions unavailable", 11, "aeaeb2").lineLimit = 2;
+    text(feels, "Feels like", 9, "aeaeb2");
+    text(feels, Math.round(yr.feelsLike) + "°", 12, "aeaeb2", true);
+    text(w, yr.description || "Conditions unavailable", 9, "aeaeb2").lineLimit = 2;
   }
   w.addSpacer(2);
   event = sun && api.nextLight(sun, now);
   if (event) {
     const row = w.addStack();
-    text(row, event.name === "Bright again" ? "Bright in " : "Dark in ", 10, "b7a17a");
+    text(row, event.name === "Bright again" ? "Bright in " : "Dark in ", 9, "b7a17a");
     const countdown = row.addDate(event.date);
     countdown.applyTimerStyle();
-    countdown.font = Font.semiboldMonospacedSystemFont(15);
+    countdown.font = Font.semiboldMonospacedSystemFont(11);
     countdown.textColor = new Color("b7a17a");
     countdown.lineLimit = 1;
     countdown.minimumScaleFactor = 0.75;
@@ -88,10 +88,10 @@ if (view === "weather") {
   const today = sun?.days.find(day => day.date === api.isoDay(api.dateKey(now)));
   if (today) {
     w.addSpacer(2);
-    w.addImage(api.scale(api.lightLevel(today, now))).imageSize = new Size(124, 3);
+    w.addImage(api.scale(api.lightLevel(today, now))).imageSize = new Size(90, 2);
   }
   w.addSpacer();
-  text(w, "MET Norway", 9, "8e8e93");
+  text(w, "MET Norway", 8, "8e8e93");
 } else if (view === "trains") {
   const [rail, sallins, connolly] = await results([api.timetable(started), api.railBoard("Sallins"), api.railBoard("Dublin Connolly")]);
   const now = new Date();
@@ -101,21 +101,21 @@ if (view === "weather") {
     ["connollySallins", "Connolly → Sallins", connolly]
   ]) {
     const train = rail ? api.nextTrain(rail.data, route, now, board || []) : { message: "Timetable unavailable" };
-    text(w, label, 12, "8eafcf", true);
+    text(w, label, 10, "8eafcf", true);
     if (train.departure) {
       const row = w.addStack();
       row.centerAlignContent();
-      text(row, clock(train.departure), 26, "8eafcf", true);
+      text(row, clock(train.departure), 18, "8eafcf", true);
       row.addSpacer();
-      text(row, train.live ? "live" : "scheduled", 10, "8e8e93");
+      text(row, train.live ? "live" : "scheduled", 8, "8e8e93");
     } else {
       const message = train.message === "TFI timetable needs refresh" ? "Refresh timetable" : train.message === "No direct service today" ? "No service today" : train.message;
-      text(w, message, 13, "8eafcf", true).lineLimit = 2;
+      text(w, message, 10, "8eafcf", true).lineLimit = 2;
     }
-    w.addSpacer(3);
+    w.addSpacer(1);
   }
   w.addSpacer();
-  text(w, "NTA/TFI · Irish Rail" + (rail?.unverified ? " · old" : ""), 9, "8e8e93");
+  text(w, "NTA · Irish Rail" + (rail?.unverified ? " · old" : ""), 8, "8e8e93");
 } else if (view === "luas") {
   const feeds = await results([api.luas("PAR", started), api.luas("ABB", started)]);
   const now = new Date();
@@ -124,23 +124,24 @@ if (view === "weather") {
   green = connection.green;
   const red = connection.red;
   header(w, "TII/Luas", now, parnell && abbey ? now - Math.min(parnell.created.getTime(), abbey.created.getTime()) : Infinity);
-  w.addSpacer();
-  const stops = w.addStack();
   for (const [label, value, color] of [
     ["Parnell", green ? green.dueNow ? "Due" : clock(green.arrival) : parnell ? "No forecast" : "Unavailable", "8cba9a"],
     ["Abbey St → Point", red ? clock(red.arrival) : abbey ? "No connection" : "Unavailable", "c99a9a"]
   ]) {
-    const stop = stops.addStack();
-    stop.layoutVertically();
-    stop.size = new Size(128, 0);
-    text(stop, label, 13, color, true);
-    text(stop, value, /^\d\d:\d\d$/.test(value) || value === "Due" ? 32 : 14, color, true).lineLimit = 2;
-    if (label !== "Parnell" && red) text(stop, "Est.", 11, "8e8e93");
-    if (label === "Parnell") stops.addSpacer();
+    const stop = w.addStack();
+    stop.centerAlignContent();
+    text(stop, label, 10, color, true);
+    stop.addSpacer();
+    text(stop, value, /^\d\d:\d\d$/.test(value) || value === "Due" ? 22 : 11, color, true);
+    if (label !== "Parnell" && red) {
+      stop.addSpacer(4);
+      text(stop, "Est.", 9, "8e8e93");
+    }
+    w.addSpacer(4);
   }
   w.addSpacer(3);
   const messages = feeds.map(feed => feed?.message).filter(message => message && !/operating normally/i.test(message));
-  if (messages.length) text(w, "Service alert", 12, "ff9f0a");
+  if (messages.length) text(w, "Service alert", 10, "ff9f0a");
   w.addSpacer();
 }
 let refresh = Date.now() + 2 * 60000;

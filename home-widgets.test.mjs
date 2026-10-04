@@ -156,9 +156,54 @@ function phone() {
   return state;
 }
 
+function contentBudget(item, availableWidth, vertical = true) {
+  if (item.children) {
+    const [top = 0, left = 0, bottom = 0, right = 0] = item.padding || [];
+    const column = vertical || item.vertical;
+    const children = item.children.map(child => 'spacer' in child ? {
+      width: column ? 0 : child.spacer || 0, height: column ? child.spacer || 0 : 0
+    } : contentBudget(child, availableWidth - left - right, false));
+    return {
+      width: left + right + Math.max(item.size?.width || 0, column ?
+        Math.max(0, ...children.map(child => child.width)) : children.reduce((sum, child) => sum + child.width, 0)),
+      height: top + bottom + (column ? children.reduce((sum, child) => sum + child.height, 0) :
+        Math.max(0, ...children.map(child => child.height)))
+    };
+  }
+  if (item.image) return { width: item.imageSize.width, height: item.imageSize.height };
+  const width = item.date ? 8 * 0.65 * item.font : [...item.value].reduce((sum, character) =>
+    sum + item.font * (/\s|[iIl.,:]/.test(character) ? 0.28 : /[MW@]/.test(character) ? 0.9 : 0.56), 0);
+  const lines = item.lineLimit > 1 ? Math.min(item.lineLimit, Math.ceil(width / availableWidth)) : 1;
+  return { width: lines > 1 ? Math.min(width, availableWidth) : width, height: item.font * 1.35 * lines };
+}
+
+test('Home Screen content leaves room for native margins and taller text', async () => {
+  // Stress assumptions, not measured iPhone dimensions: 12 pt margins and 1.35 font line height.
+  for (const [name, change] of [
+    ['Weather'], ['Trains'], ['Luas'],
+    ['Weather', async p => {
+      await p.run('Weather');
+      const cached = JSON.parse(p.files.get(homeCache + 'weather.json'));
+      p.files.set(homeCache + 'weather.json', JSON.stringify({ ...cached,
+        temperature: -12, feelsLike: -18, description: 'Light rain showers and thunder' }));
+    }],
+    ['Trains', p => { p.time = Date.parse('2026-12-13T12:00:00Z'); p.fail.add(github + 'rail.json'); }],
+    ['Luas', p => { p.feedAge = 4 * 60000; }]
+  ]) {
+    const p = phone();
+    if (change) await change(p);
+    await p.run(name);
+    const width = (name === 'Luas' ? 280 : 140) - 24;
+    const height = 140 - 24;
+    const budget = contentBudget(p.widget, width);
+    assert.ok(budget.width <= width, name + ' needs ' + budget.width + ' pt width, available ' + width);
+    assert.ok(budget.height <= height, name + ' needs ' + budget.height + ' pt height, available ' + height);
+  }
+});
+
 for (const [name, size, heading, credit, provider] of [
   ['Weather', 'small', 'Yr', 'MET Norway', 'yr.no'],
-  ['Trains', 'small', '5 Oct', 'NTA/TFI · Irish Rail', 'api.irishrail.ie'],
+  ['Trains', 'small', '5 Oct', 'NTA · Irish Rail', 'api.irishrail.ie'],
   ['Luas', 'medium', 'Parnell', 'TII/Luas', 'luasforecasts']
 ]) test(name + ' uses its own feeds, size, and cache', async () => {
   const p = phone(); p.app = true;
@@ -176,7 +221,7 @@ for (const [name, size, heading, credit, provider] of [
 
 for (const [parameter, family, heading, credit] of [
   ['weather', 'small', 'Yr', 'MET Norway'],
-  ['trains', 'small', '5 Oct', 'NTA/TFI · Irish Rail'],
+  ['trains', 'small', '5 Oct', 'NTA · Irish Rail'],
   ['luas', 'medium', 'Parnell', 'TII/Luas']
 ]) test('existing Dashboard loader selects ' + parameter + ' without new phone code', async () => {
   const p = phone(); p.parameter = parameter; p.family = family; p.app = true;
@@ -219,7 +264,7 @@ test('weather keeps Yr values, daylight scale, next event, and data age colors',
   let text = await p.run('Weather');
   for (const value of ['12°', 'Feels like', '10°', 'Light rain', 'Dark in ']) assert.ok(text.includes(value));
   const image = p.rendered.find(item => item.image);
-  assert.equal(image.imageSize.width, 124);
+  assert.equal(image.imageSize.width, 90);
   assert.ok(image.image.fills[1].width > 2 && image.image.fills[1].width < 170);
   assert.equal(p.rendered.filter(item => item.timer).length, 2);
   const cached = JSON.parse(p.files.get(homeCache + 'weather.json'));
@@ -283,7 +328,7 @@ test('small trains preserve expired fallback warnings without competing with rou
   p.fail.add(github + 'rail.json');
   const text = await p.run('Trains');
   assert.equal(text.filter(value => value === 'Refresh timetable').length, 2);
-  assert.ok(text.includes('NTA/TFI · Irish Rail · old'));
+  assert.ok(text.includes('NTA · Irish Rail · old'));
   assert.ok(text.includes('13 Dec'));
   assert.equal(p.widget.children.filter(item => item.value === 'Refresh timetable').length, 2);
   assert.equal(p.rendered.find(item => item.value === '● ').textColor.hex, 'ff453a');
