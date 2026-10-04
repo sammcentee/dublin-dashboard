@@ -1,0 +1,99 @@
+{
+  "source": "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip",
+  "sourceInfoUrl": "https://www.transportforireland.ie/transitData/PT_Data.html",
+  "retrievedAt": "2026-10-04",
+  "feedVersion": "892A3408-F422-4978-8896-7420CF625122",
+  "feedStart": "20261003",
+  "feedEnd": "20271003",
+  "sourceLastModified": "Sat, 03 Oct 2026 22:15:56 GMT",
+  "sourceETag": "\"75b285-65cf6fe27df00\"",
+  "timezone": "Europe/Dublin",
+  "routes": {
+    "sallinsHeuston": [
+      {
+        "departure": "22:11:00",
+        "arrival": "22:46:00",
+        "serviceId": "216",
+        "tripId": "5936_11751",
+        "destination": "Dublin Heuston",
+        "trainCode": "P227"
+      },
+      {
+        "departure": "22:29:00",
+        "arrival": "22:52:00",
+        "serviceId": "195",
+        "tripId": "5936_13185",
+        "destination": "Dublin Heuston",
+        "trainCode": "A531"
+      },
+      {
+        "departure": "23:09:00",
+        "arrival": "23:42:00",
+        "serviceId": "203",
+        "tripId": "5936_11770",
+        "destination": "Dublin Heuston",
+        "trainCode": "P229"
+      },
+      {
+        "departure": "23:44:00",
+        "arrival": "24:17:00",
+        "serviceId": "65",
+        "tripId": "5936_11791",
+        "destination": "Dublin Heuston",
+        "trainCode": "P229"
+      }
+    ],
+    "connollySallins": [
+      {
+        "departure": "18:32:00",
+        "arrival": "19:23:00",
+        "serviceId": "180",
+        "tripId": "5936_11923",
+        "destination": "Newbridge",
+        "trainCode": "D419"
+      }
+    ]
+  },
+  "services": {
+    "65": {
+      "start": "20261003",
+      "end": "20261003",
+      "weekdays": "0000010",
+      "exceptions": {}
+    },
+    "180": {
+      "start": "20261002",
+      "end": "20261211",
+      "weekdays": "1111100",
+      "exceptions": {
+        "20261026": 2
+      }
+    },
+    "195": {
+      "start": "20261002",
+      "end": "20261212",
+      "weekdays": "1111110",
+      "exceptions": {
+        "20261026": 2
+      }
+    },
+    "203": {
+      "start": "20261002",
+      "end": "20261212",
+      "weekdays": "1111110",
+      "exceptions": {
+        "20261003": 2,
+        "20261026": 2
+      }
+    },
+    "216": {
+      "start": "20261002",
+      "end": "20261212",
+      "weekdays": "1111110",
+      "exceptions": {}
+    }
+  },
+  "validThrough": "20261212",
+  "attribution": "Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.",
+  "checkedAt": 1791111945903
+}

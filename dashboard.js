@@ -6,8 +6,8 @@
 // Daylight calculations: adapted from SunCalc under BSD-2-Clause; notice retained below.
 const TZ = "Europe/Dublin";
 const YR = "https://www.yr.no/en/forecast/daily-table/2-2964574/Ireland/Leinster/Dublin%20City/Dublin";
-const RAIL_URL = "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip";
-const EMBEDDED_RAIL = {"source":"https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip","retrievedAt":"2026-10-03","feedVersion":"0553EF0E-F1A8-463C-A62F-38176FC6F829","feedStart":"20261002","feedEnd":"20271002","sourceLastModified":"Fri, 02 Oct 2026 22:18:20 GMT","sourceETag":"\"75b4e3-65ce2e8e5c300\"","timezone":"Europe/Dublin","routes":{"sallinsHeuston":[{"departure":"22:11:00","arrival":"22:46:00","serviceId":"221","tripId":"5936_11751","destination":"Dublin Heuston","trainCode":"P227"},{"departure":"22:29:00","arrival":"22:52:00","serviceId":"200","tripId":"5936_13185","destination":"Dublin Heuston","trainCode":"A531"},{"departure":"23:09:00","arrival":"23:42:00","serviceId":"208","tripId":"5936_11770","destination":"Dublin Heuston","trainCode":"P229"},{"departure":"23:44:00","arrival":"24:17:00","serviceId":"113","tripId":"5936_11791","destination":"Dublin Heuston","trainCode":"P229"}],"connollySallins":[{"departure":"18:32:00","arrival":"19:23:00","serviceId":"183","tripId":"5936_11923","destination":"Newbridge","trainCode":"D419"}]},"services":{"200":{"start":"20261001","end":"20261212","weekdays":"1111110","exceptions":{"20261026":2}},"208":{"start":"20261001","end":"20261212","weekdays":"1111110","exceptions":{"20261003":2,"20261026":2}},"183":{"start":"20261001","end":"20261211","weekdays":"1111100","exceptions":{"20261026":2}},"113":{"start":"20261003","end":"20261003","weekdays":"0000010","exceptions":{}},"221":{"start":"20261001","end":"20261212","weekdays":"1111110","exceptions":{}}},"attribution":"Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.","validThrough":"20261212","sourceInfoUrl":"https://www.transportforireland.ie/transitData/PT_Data.html"};
+const RAIL_URL = "https://raw.githubusercontent.com/sammcentee/dublin-dashboard/main/rail.json";
+const EMBEDDED_RAIL = {"source":"https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip","sourceInfoUrl":"https://www.transportforireland.ie/transitData/PT_Data.html","retrievedAt":"2026-10-04","feedVersion":"892A3408-F422-4978-8896-7420CF625122","feedStart":"20261003","feedEnd":"20271003","sourceLastModified":"Sat, 03 Oct 2026 22:15:56 GMT","sourceETag":"\"75b285-65cf6fe27df00\"","timezone":"Europe/Dublin","routes":{"sallinsHeuston":[{"departure":"22:11:00","arrival":"22:46:00","serviceId":"216","tripId":"5936_11751","destination":"Dublin Heuston","trainCode":"P227"},{"departure":"22:29:00","arrival":"22:52:00","serviceId":"195","tripId":"5936_13185","destination":"Dublin Heuston","trainCode":"A531"},{"departure":"23:09:00","arrival":"23:42:00","serviceId":"203","tripId":"5936_11770","destination":"Dublin Heuston","trainCode":"P229"},{"departure":"23:44:00","arrival":"24:17:00","serviceId":"65","tripId":"5936_11791","destination":"Dublin Heuston","trainCode":"P229"}],"connollySallins":[{"departure":"18:32:00","arrival":"19:23:00","serviceId":"180","tripId":"5936_11923","destination":"Newbridge","trainCode":"D419"}]},"services":{"65":{"start":"20261003","end":"20261003","weekdays":"0000010","exceptions":{}},"180":{"start":"20261002","end":"20261211","weekdays":"1111100","exceptions":{"20261026":2}},"195":{"start":"20261002","end":"20261212","weekdays":"1111110","exceptions":{"20261026":2}},"203":{"start":"20261002","end":"20261212","weekdays":"1111110","exceptions":{"20261003":2,"20261026":2}},"216":{"start":"20261002","end":"20261212","weekdays":"1111110","exceptions":{}}},"validThrough":"20261212","attribution":"Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.","checkedAt":1791111945903};
 const fm = FileManager.local();
 const folder = fm.joinPath(fm.documentsDirectory(), "DublinDashboard");
 if (!fm.fileExists(folder)) fm.createDirectory(folder, true);
@@ -24,9 +24,6 @@ function request(url) {
   r.timeoutInterval = 12;
   r.headers = { "User-Agent": "DublinDashboard/1.0 (personal Scriptable widget)", "Cache-Control": "no-cache" };
   return r;
-}
-function headers(response) {
-  return Object.fromEntries(Object.entries(response.headers || {}).map(([k, v]) => [k.toLowerCase(), v]));
 }
 function parts(date) {
   const format = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
@@ -191,9 +188,9 @@ function parseRail(xml) {
 async function railBoard(station) {
   return parseRail(await request("https://api.irishrail.ie/realtime/realtime.asmx/getStationDataByNameXML_withNumMins?StationDesc=" + encodeURIComponent(station) + "&NumMins=90").loadString());
 }
-function nextTrain(data, route, now, board = [], changed = false) {
+function nextTrain(data, route, now, board = []) {
   const key = dateKey(now);
-  if (changed || key < data.feedStart || key > data.validThrough) return { message: "TFI timetable needs refresh" };
+  if (key < data.feedStart || key > data.validThrough) return { message: "TFI timetable needs refresh" };
   const today = data.routes[route].filter(t => activeService(data.services[t.serviceId], key));
   const candidates = [];
   for (const trip of today) {
@@ -241,182 +238,26 @@ function connection(parnell, abbey, now) {
   return { green, red };
 }
 
-// Heavy timetable decoding runs only in the app, never inside a widget.
-async function unzipRail(base64) {
-  const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-  const v = new DataView(bytes.buffer), names = new Set(["feed_info.txt", "stop_times.txt", "trips.txt", "calendar.txt", "calendar_dates.txt"]);
-  let end = bytes.length - 22;
-  while (end >= Math.max(0, bytes.length - 65557) && v.getUint32(end, true) !== 0x06054b50) end--;
-  if (end < 0 || v.getUint32(end, true) !== 0x06054b50) throw new Error("TFI archive not recognised");
-  let pos = v.getUint32(end + 16, true);
-  const count = v.getUint16(end + 10, true), files = {};
-  for (let i = 0; i < count; i++) {
-    if (v.getUint32(pos, true) !== 0x02014b50) throw new Error("Invalid TFI ZIP directory");
-    const method = v.getUint16(pos + 10, true), size = v.getUint32(pos + 20, true), n = v.getUint16(pos + 28, true), extra = v.getUint16(pos + 30, true), comment = v.getUint16(pos + 32, true), local = v.getUint32(pos + 42, true);
-    const name = new TextDecoder().decode(bytes.subarray(pos + 46, pos + 46 + n));
-    if (names.has(name)) {
-      const start = local + 30 + v.getUint16(local + 26, true) + v.getUint16(local + 28, true);
-      let stream = new Blob([bytes.subarray(start, start + size)]).stream();
-      if (method === 8) stream = stream.pipeThrough(new DecompressionStream("deflate-raw"));
-      else if (method !== 0) throw new Error("Unsupported TFI archive format");
-      files[name] = await new Response(stream).text();
-    }
-    pos += 46 + n + extra + comment;
-  }
-  if (!files["stop_times.txt"] || !files["trips.txt"]) throw new Error("TFI timetable missing");
-  return files;
-}
-function extractRailSchedule(files) {
-  function readCsv(name, visit) {
-    const text = (files[name] || "").replace(/^\uFEFF/, "");
-    let columns, row = [], field = "", quoted = false;
-    function finishRow() {
-      row.push(field);
-      if (!columns) columns = row;
-      else if (row.some(value => value !== "")) {
-        const record = {};
-        columns.forEach((column, i) => record[column] = row[i] || "");
-        visit(record);
-      }
-      row = [];
-      field = "";
-    }
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      if (char === '"') {
-        if (quoted && text[i + 1] === '"') { field += '"'; i++; }
-        else quoted = !quoted;
-      } else if (char === "," && !quoted) {
-        row.push(field);
-        field = "";
-      } else if ((char === "\n" || char === "\r") && !quoted) {
-        finishRow();
-        if (char === "\r" && text[i + 1] === "\n") i++;
-      } else field += char;
-    }
-    if (field || row.length) finishRow();
-  }
-  function seconds(time) {
-    const parts = time.split(":").map(Number);
-    return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  }
-  function dateKey(date) { return date.toISOString().slice(0, 10).replace(/-/g, ""); }
-  function parseDate(key) {
-    return new Date(Date.UTC(Number(key.slice(0, 4)), Number(key.slice(4, 6)) - 1, Number(key.slice(6, 8))));
-  }
-
-  let feed = {};
-  readCsv("feed_info.txt", row => feed = row);
-  const pairs = {
-    sallinsHeuston: ["8260IR0060", "8220IR0132", 22 * 3600],
-    connollySallins: ["8220IR0007", "8260IR0060", 18 * 3600]
-  };
-  const stations = new Set(["8260IR0060", "8220IR0132", "8220IR0007"]);
-  const stops = {};
-  readCsv("stop_times.txt", row => {
-    if (stations.has(row.stop_id)) (stops[row.trip_id] || (stops[row.trip_id] = {}))[row.stop_id] = row;
-  });
-  const routes = { sallinsHeuston: [], connollySallins: [] };
-  const serviceIds = new Set();
-  readCsv("trips.txt", trip => {
-    const times = stops[trip.trip_id];
-    if (!times) return;
-    for (const name of Object.keys(pairs)) {
-      const [origin, destination, cutoff] = pairs[name];
-      const from = times[origin], to = times[destination];
-      if (!from || !to || Number(from.stop_sequence) >= Number(to.stop_sequence) ||
-          from.pickup_type === "1" || to.drop_off_type === "1" || seconds(from.departure_time) <= cutoff) continue;
-      routes[name].push({ departure: from.departure_time, arrival: to.arrival_time,
-        serviceId: trip.service_id, tripId: trip.trip_id,
-        destination: trip.trip_headsign, trainCode: trip.trip_short_name });
-      serviceIds.add(trip.service_id);
-    }
-  });
-  for (const route of Object.values(routes)) route.sort((a, b) => seconds(a.departure) - seconds(b.departure));
-
-  const services = {};
-  const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-  readCsv("calendar.txt", row => {
-    if (serviceIds.has(row.service_id)) services[row.service_id] = {
-      start: row.start_date, end: row.end_date,
-      weekdays: weekdays.map(day => row[day]).join(""), exceptions: {}
-    };
-  });
-  readCsv("calendar_dates.txt", row => {
-    if (!serviceIds.has(row.service_id)) return;
-    const service = services[row.service_id] || (services[row.service_id] = {
-      start: row.date, end: row.date, weekdays: "0000000", exceptions: {}
-    });
-    service.exceptions[row.date] = Number(row.exception_type);
-    if (service.weekdays === "0000000") {
-      service.start = service.start < row.date ? service.start : row.date;
-      service.end = service.end > row.date ? service.end : row.date;
-    }
-  });
-
-  let validThrough = "";
-  for (const service of Object.values(services)) {
-    const limit = feed.feed_end_date || service.end;
-    const last = service.end < limit ? service.end : limit;
-    if (service.weekdays.includes("1")) {
-      const date = parseDate(last);
-      while (dateKey(date) >= service.start) {
-        const key = dateKey(date), exception = service.exceptions[key];
-        if (exception === 1 || (exception !== 2 && service.weekdays[(date.getUTCDay() + 6) % 7] === "1")) {
-          if (key > validThrough) validThrough = key;
-          break;
-        }
-        date.setUTCDate(date.getUTCDate() - 1);
-      }
-    }
-    for (const [key, exception] of Object.entries(service.exceptions)) {
-      if (exception === 1 && key <= (feed.feed_end_date || key) && key > validThrough) validThrough = key;
-    }
-  }
-  return {
-    source: "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip",
-    sourceInfoUrl: "https://www.transportforireland.ie/transitData/PT_Data.html",
-    retrievedAt: new Date().toISOString().slice(0, 10),
-    feedVersion: feed.feed_version, feedStart: feed.feed_start_date, feedEnd: feed.feed_end_date,
-    sourceLastModified: null, sourceETag: null, timezone: "Europe/Dublin",
-    routes, services, validThrough,
-    attribution: "Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee."
-  };
-}
 async function timetable(now) {
-  let data = readCache("rail") || EMBEDDED_RAIL;
-  let check = readCache("rail-check");
-  if (config.runsInApp || !check || now.getTime() - check.at > 6 * 3600000) {
-    try {
-      const head = request(RAIL_URL);
-      head.method = "HEAD";
-      await head.load();
-      const h = headers(head.response);
-      if (head.response.statusCode !== 200) throw new Error("TFI check unavailable");
-      check = { at: now.getTime(), modified: h["last-modified"], etag: h.etag };
-      saveCache("rail-check", check);
-    } catch (e) { console.log(String(e)); }
-  }
-  let changed = Boolean(check && ((check.etag && data.sourceETag && check.etag !== data.sourceETag) || (check.modified && data.sourceLastModified && check.modified !== data.sourceLastModified)));
-  if (config.runsInApp && (changed || dateKey(now) > data.validThrough)) {
+  let data = readCache("rail");
+  if (!data || (data.checkedAt || 0) < (EMBEDDED_RAIL.checkedAt || 0)) data = EMBEDDED_RAIL;
+  const check = readCache("rail-fetch");
+  if (config.runsInApp || !check || now.getTime() - check.at >= 3600000) {
+    saveCache("rail-fetch", { at: now.getTime() });
     try {
       const r = request(RAIL_URL);
-      r.timeoutInterval = 45;
-      const archive = await r.load();
+      const value = await r.loadJSON();
       if (r.response.statusCode !== 200) throw new Error("TFI download unavailable");
-      const view = new WebView();
-      await view.loadHTML("<html><body></body></html>");
-      const code = "(" + unzipRail.toString() + ")(" + JSON.stringify(archive.toBase64String()) + ").then(files => (" + extractRailSchedule.toString() + ")(files)).then(value => completion({value})).catch(error => completion({error: String(error)}));";
-      const result = await view.evaluateJavaScript(code, true);
-      if (result.error) throw new Error(result.error);
-      const h = headers(r.response);
-      data = { ...result.value, retrievedAt: isoDay(dateKey(now)), sourceLastModified: h["last-modified"], sourceETag: h.etag };
-      if (!data.validThrough || !data.routes) throw new Error("Invalid TFI timetable");
-      saveCache("rail", data);
-      changed = false;
+      if (value.timezone !== TZ || !/^\d{8}$/.test(value.feedStart) || !/^\d{8}$/.test(value.validThrough) ||
+          !Array.isArray(value.routes?.sallinsHeuston) || !Array.isArray(value.routes?.connollySallins) || !value.services ||
+          !Number.isFinite(value.checkedAt) || value.checkedAt <= 0 || value.checkedAt > now.getTime() + 5 * 60000) throw new Error("Invalid TFI timetable");
+      if (value.checkedAt >= (data.checkedAt || 0)) {
+        data = value;
+        saveCache("rail", data);
+      }
     } catch (e) { console.log(String(e)); }
   }
-  return { data, changed, unverified: !check || now.getTime() - check.at > 24 * 3600000 };
+  return { data, unverified: !data.checkedAt || now.getTime() - data.checkedAt > 24 * 3600000 };
 }
 
 function text(parent, value, size, color = "ffffff", bold = false) {
@@ -481,8 +322,8 @@ async function dashboard() {
     }
   } else text(w, "Daylight unavailable", 13);
   w.addSpacer(8);
-  trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || [], rail.changed) : { message: "TFI timetable unavailable" });
-  trainRow(w, "CONNOLLY → SALLINS · after 18:00 · direct", rail ? nextTrain(rail.data, "connollySallins", now, connolly || [], rail.changed) : { message: "TFI timetable unavailable" });
+  trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || []) : { message: "TFI timetable unavailable" });
+  trainRow(w, "CONNOLLY → SALLINS · after 18:00 · direct", rail ? nextTrain(rail.data, "connollySallins", now, connolly || []) : { message: "TFI timetable unavailable" });
   const usableParnell = parnell && Math.abs(now - parnell.created) <= 3 * 60000 ? parnell : null;
   const usableAbbey = abbey && Math.abs(now - abbey.created) <= 3 * 60000 ? abbey : null;
   const { green, red } = connection(usableParnell, usableAbbey, now);

@@ -32,9 +32,11 @@ Ireland, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/
 - [NTA usage policy](https://developer.nationaltransport.ie/usagepolicy)
 
 The embedded timetable is a filtered, converted extract of the NTA feed,
-retrieved on 3 October 2026. Only qualifying direct trips for the two requested
-journeys are retained. Refreshed feeds are filtered and converted in the same
-way. This is not the complete official timetable.
+retrieved on 4 October 2026. Only qualifying direct trips for the two requested
+journeys are retained. `rail.json` is refreshed from the source by a scheduled
+GitHub workflow; its `checkedAt` records the last successful source download.
+Refreshed feeds are filtered and converted in the same way. This is not the
+complete official timetable.
 
 NTA data is provided **as-is**, without warranties. The NTA is not responsible
 for errors or inaccuracies. The timetable snapshot is not a guarantee that a
