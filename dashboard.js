@@ -346,8 +346,8 @@ function temperatureColor(t) {
 }
 // Temperature gauge in the style of Apple Weather: a 3/4 ring from today's low to high.
 function temperatureRing(yr) {
-  const size = 60, c = size / 2, r = 25, width = 5, start = 0.75 * Math.PI, sweep = 1.5 * Math.PI;
-  const point = f => new Point(c + r * Math.cos(start + f * sweep), c + r * Math.sin(start + f * sweep));
+  const size = 60, cx = size / 2, cy = 28, r = 23, width = 5, start = 0.75 * Math.PI, sweep = 1.5 * Math.PI;
+  const point = f => new Point(cx + r * Math.cos(start + f * sweep), cy + r * Math.sin(start + f * sweep));
   const dc = new DrawContext();
   dc.size = new Size(size, size);
   dc.opaque = false;
@@ -365,11 +365,13 @@ function temperatureRing(yr) {
   dc.setTextAlignedCenter();
   dc.setFont(Font.semiboldSystemFont(19));
   dc.setTextColor(new Color("f2f2f7"));
-  dc.drawTextInRect(Math.round(yr.temperature) + "°", new Rect(0, c - 12, size, 24));
+  dc.drawTextInRect(Math.round(yr.temperature) + "°", new Rect(0, cy - 12, size, 24));
   dc.setFont(Font.semiboldSystemFont(10));
   dc.setTextColor(new Color("8e8e93"));
-  dc.drawTextInRect(String(Math.round(yr.low)), new Rect(c - 21, size - 13, 18, 13));
-  dc.drawTextInRect(String(Math.round(yr.high)), new Rect(c + 3, size - 13, 18, 13));
+  // Low and high sit under the ring ends, clear of the current-temperature dot.
+  const [left, right] = [point(0), point(1)];
+  dc.drawTextInRect(String(Math.round(yr.low)), new Rect(left.x - 10, size - 11, 20, 11));
+  dc.drawTextInRect(String(Math.round(yr.high)), new Rect(right.x - 10, size - 11, 20, 11));
   return dc.getImage();
 }
 function trainRow(w, label, result) {
