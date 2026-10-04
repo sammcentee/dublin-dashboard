@@ -272,7 +272,7 @@ function timer(parent, date) {
   const item = parent.addDate(date);
   item.applyTimerStyle();
   item.font = Font.semiboldMonospacedSystemFont(17);
-  item.textColor = new Color("c7c7cc");
+  item.textColor = new Color("b7a17a");
 }
 function freshnessColor(age) {
   return age < 5 * 60000 ? "30d158" : age < 15 * 60000 ? "ff9f0a" : "ff453a";
@@ -284,14 +284,14 @@ function scale(level) {
   dc.respectScreenScale = true;
   dc.setFillColor(new Color("3a3a3c"));
   dc.fillRect(new Rect(0, 0, 170, 6));
-  dc.setFillColor(new Color("636366"));
+  dc.setFillColor(new Color("9f8d6c"));
   dc.fillRect(new Rect(0, 0, Math.max(2, level * 170), 6));
   return dc.getImage();
 }
 function trainRow(w, label, result) {
-  text(w, label, 11, "aeaeb2");
-  if (result.message) text(w, result.message, 17, "f2f2f7", true);
-  else text(w, clock(result.departure) + " · " + dayLabel(result.departure) + " · " + (result.live ? "live" : "scheduled"), 17, "f2f2f7", true);
+  text(w, label, 11, "8eafcf");
+  if (result.message) text(w, result.message, 17, "8eafcf", true);
+  else text(w, clock(result.departure) + " · " + dayLabel(result.departure) + " · " + (result.live ? "live" : "scheduled"), 17, "8eafcf", true);
   w.addSpacer(5);
 }
 async function dashboard() {
@@ -309,7 +309,7 @@ async function dashboard() {
   w.setPadding(13, 15, 12, 15);
   const header = w.addStack();
   header.centerAlignContent();
-  text(header, "DUBLIN  ·  " + dayLabel(now), 11, "aeaeb2", true);
+  text(header, yr ? Math.round(yr.temperature) + "°C  ·  feels " + Math.round(yr.feelsLike) + "°C" : "Yr weather unavailable", 23, "f2f2f7", true);
   header.addSpacer();
   const freshness = header.addStack();
   freshness.centerAlignContent();
@@ -326,7 +326,6 @@ async function dashboard() {
   elapsed.font = Font.semiboldMonospacedSystemFont(17);
   elapsed.textColor = new Color(statusColor);
   w.addSpacer(6);
-  text(w, yr ? Math.round(yr.temperature) + "°C  ·  feels " + Math.round(yr.feelsLike) + "°C" : "Yr weather unavailable", 23, "f2f2f7", true);
   const yrTime = yr?.updatedAt ? " · " + clock(new Date(yr.updatedAt)) : "";
   text(w, (yr ? (yr.description || "Conditions unavailable") + " · " : "") + "Yr · MET Norway" + yrTime + (yr?.stale ? " · cached" : ""), 11, "8e8e93");
   w.addSpacer(5);
@@ -334,7 +333,7 @@ async function dashboard() {
   if (sun) {
     event = nextLight(sun, now);
     const row = w.addStack();
-    text(row, event ? event.name + " in  " : "Daylight unavailable", 13);
+    text(row, event ? event.name + " in  " : "Daylight unavailable", 13, "b7a17a");
     if (event) timer(row, event.date);
     const today = sun.days.find(d => d.date === isoDay(dateKey(now)));
     if (today) {
@@ -343,18 +342,18 @@ async function dashboard() {
       text(bar, "Dark  ", 9, "8e8e93");
       const image = bar.addImage(scale(lightLevel(today, now)));
       image.imageSize = new Size(170, 6);
-      text(bar, "  Bright", 9, "8e8e93");
+      text(bar, "  Bright", 9, "b7a17a");
     }
   } else text(w, "Daylight unavailable", 13);
   w.addSpacer(8);
   trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || []) : { message: "TFI timetable unavailable" });
   trainRow(w, "CONNOLLY → SALLINS · after 18:00 · direct", rail ? nextTrain(rail.data, "connollySallins", now, connolly || []) : { message: "TFI timetable unavailable" });
   const { green, red } = connection(usableParnell, usableAbbey, now);
-  text(w, "PARNELL · southbound Green Line", 11, "aeaeb2");
-  text(w, green ? (green.dueNow ? "Due" : clock(green.arrival)) + " · " + green.destination : usableParnell ? "No tram forecast" : "Luas feed unavailable", 17, "f2f2f7", true);
+  text(w, "PARNELL · southbound Green Line", 11, "8cba9a");
+  text(w, green ? (green.dueNow ? "Due" : clock(green.arrival)) + " · " + green.destination : usableParnell ? "No tram forecast" : "Luas feed unavailable", 17, "8cba9a", true);
   w.addSpacer(5);
-  text(w, "ABBEY STREET → THE POINT · connecting tram", 11, "aeaeb2");
-  text(w, red ? clock(red.arrival) + " · estimated connection" : !green ? "Awaiting Parnell tram" : usableAbbey ? "No connection in forecast" : "Luas feed unavailable", 17, "f2f2f7", true);
+  text(w, "ABBEY STREET → THE POINT · connecting tram", 11, "c99a9a");
+  text(w, red ? clock(red.arrival) + " · estimated connection" : !green ? "Awaiting Parnell tram" : usableAbbey ? "No connection in forecast" : "Luas feed unavailable", 17, "c99a9a", true);
   text(w, "7 min from Parnell · via Marlborough", 9, "8e8e93");
   const messages = [parnell?.message, abbey?.message].filter(m => m && !/operating normally/i.test(m));
   if (messages.length) text(w, [...new Set(messages)].join(" · "), 9, "ff9f0a");
