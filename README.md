@@ -28,6 +28,45 @@ the saved copy. The first run needs an internet connection. The loader checks
 syntax before saving; a runtime bug in an update still needs correcting or
 reverting in Git.
 
+## Home Screen widgets
+
+These 3 widgets use the same data and dark colors as the large dashboard.
+Each widget gets only its data.
+The widgets use a different folder for saved data.
+The large dashboard keeps its script and saved data.
+
+| Script | Widget size | Information |
+| --- | --- | --- |
+| [Dublin Weather](Dublin%20Weather.js) | Small | Temperature, feels-like temperature, weather description, daylight countdown and scale |
+| [Dublin Trains](Dublin%20Trains.js) | Medium | Both direct train routes, with the same cutoffs and dates for today only |
+| [Dublin Luas](Dublin%20Luas.js) | Medium | Parnell Green Line tram and a possible Abbey Street connection toward The Point |
+
+1. Open a script from the table.
+2. Select `Raw`.
+3. Copy all the code.
+4. In Scriptable, make a new script with the name from the table.
+5. Paste the code into the new script.
+6. With an internet connection, select the run button.
+7. Do these steps again for the other 2 scripts.
+
+To [add each widget to the Home Screen](https://support.apple.com/en-ie/118610):
+
+1. Touch and hold an empty area of the Home Screen.
+2. Select `Edit`.
+3. Select `Add Widget`.
+4. Select Scriptable.
+5. Select the size from the table.
+6. Select `Add Widget`.
+7. Touch and hold the new widget.
+8. Select `Edit Widget`.
+9. Select the script with the correct name.
+10. Set `When Interacting` to `Run Script`.
+
+The new scripts download updates from this repository at each run.
+If they cannot get code from GitHub, they use the saved code.
+For the first run, you must use an internet connection.
+iOS sets the time for each widget refresh.
+
 ## Licence and credits
 
 Original project code, documentation and banner are [MIT licensed](LICENSE).

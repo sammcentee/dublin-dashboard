@@ -5,6 +5,10 @@ The project's original code, documentation and banner are covered by the
 names or branding. Preserve the notices below when redistributing the relevant
 material. Provider credits appear in the widget without tap links.
 
+The 3 Home Screen widgets use the data functions from `dashboard.js`.
+They keep the full source and its notices in a different folder on the phone.
+Each Home Screen widget shows credits for its data sources.
+
 ## Weather: MET Norway, via Yr
 
 Weather data from **the Norwegian Meteorological Institute (MET Norway)**,
