@@ -464,7 +464,7 @@ async function dashboard() {
   const head = w.addStack();
   text(head, "PARNELL", 11, "8cba9a");
   text(head, "  →  ABBEY ST", 11, "c99a9a");
-  text(head, "  →  WORK", 11, "f4b183");
+  text(head, "  →  WORK", 11, "d8b597");
   head.addSpacer();
   text(head, "5 min transfer · estimated", 9, "8e8e93");
   if (!trips.length) text(w, usableParnell ? "No tram forecast" : "Luas feed unavailable", 15, "8cba9a", true);
@@ -477,7 +477,7 @@ async function dashboard() {
       text(row, clock(red.arrival), 15, "c99a9a").font = Font.semiboldMonospacedSystemFont(15);
       text(row, "  " + red.destination, 11, "c99a9a");
       text(row, "  →  ", 13, "8e8e93");
-      text(row, clock(work), 15, "f4b183").font = Font.semiboldMonospacedSystemFont(15);
+      text(row, clock(work), 15, "d8b597").font = Font.semiboldMonospacedSystemFont(15);
     } else text(row, usableAbbey ? "No connection in forecast" : "Luas feed unavailable", 13, "c99a9a", true);
   }
   const messages = [parnell?.message, abbey?.message].filter(m => m && !/operating normally/i.test(m));
