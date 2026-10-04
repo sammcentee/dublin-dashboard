@@ -274,6 +274,9 @@ function timer(parent, date) {
   item.font = Font.semiboldMonospacedSystemFont(17);
   item.textColor = new Color("f8d574");
 }
+function freshnessColor(age) {
+  return age < 5 * 60000 ? "75d5b1" : age < 15 * 60000 ? "f6b55a" : "f07878";
+}
 function scale(level) {
   const dc = new DrawContext();
   dc.size = new Size(170, 8);
@@ -342,7 +345,16 @@ async function dashboard() {
   text(sources, "Irish Rail · TII/Luas" + (usableParnell ? " " + clock(usableParnell.created) : ""), 8, "9eafc5");
   sources.addSpacer();
   text(sources, "SunCalc", 8, "9eafc5");
-  text(w, "Automatic updates · timing controlled by iOS", 8, "9eafc5");
+  const dataAge = !rail || rail.unverified || !sallins || !connolly ? Infinity :
+    now.getTime() - Math.min(yr?.fetchedAt || 0, usableParnell?.created.getTime() || 0, usableAbbey?.created.getTime() || 0);
+  const freshness = w.addStack();
+  freshness.centerAlignContent();
+  text(freshness, "●", 11, freshnessColor(dataAge));
+  text(freshness, " Refreshed " + clock(now) + " · elapsed ", 9, "9eafc5");
+  const elapsed = freshness.addDate(now);
+  elapsed.applyTimerStyle();
+  elapsed.font = Font.semiboldMonospacedSystemFont(10);
+  elapsed.textColor = new Color("b8c4d4");
   let refresh = now.getTime() + 2 * 60000;
   if (event) refresh = Math.min(refresh, event.date.getTime() + 1000);
   if (green) refresh = Math.min(refresh, green.arrival.getTime() + 15000);
