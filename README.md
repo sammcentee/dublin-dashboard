@@ -10,7 +10,7 @@
 
 # Dublin Dashboard
 
-A large iPhone widget for the free Scriptable app. Shows Dublin weather from Yr,
+A large iPhone widget for the free Scriptable app. Shows Yr weather for your location,
 a daylight scale and countdown, today's qualifying direct Irish Rail trains,
 and up to 5 Parnell Green Line trams, each with a connecting Abbey Street
 Red Line tram toward The Point or Connolly and an estimated arrival time at work.
@@ -23,11 +23,12 @@ A rain line shows if rain is forecast at your location in the next hour.
 3. In Scriptable, open your existing **Dublin Dashboard** script.
 4. Replace its contents with the loader and press the run button while online.
 5. Keep the large widget selected to use **Dublin Dashboard**.
-6. For the rain line, go to **Settings → Privacy & Security → Location Services →
+6. For weather and rain at your location, go to **Settings → Privacy & Security → Location Services →
    Scriptable** and select **While Using the App or Widgets**.
 
-The rain line sends your location, rounded to 3 decimal places (about 100 m),
-to Open-Meteo. If the phone cannot get a location, the widget uses the last one.
+The widget sends your location, rounded to 3 decimal places (about 100 m),
+to Yr and Open-Meteo. If the phone cannot get a location, the widget uses the
+last one. With no location at all, the weather is for Dublin.
 
 The phone downloads `dashboard.js` from this repository's `main` branch each time
 the widget runs. If GitHub is unreachable or returns invalid JavaScript, it uses

@@ -75,11 +75,14 @@ function parseYr(html) {
   const range = [data.temperature.value, today?.min, today?.max].filter(Number.isFinite);
   return { temperature: data.temperature.value, feelsLike: data.temperature.feelsLike, description, symbol: data.symbolCode?.next1Hour || null, low: Math.min(...range), high: Math.max(...range) };
 }
-async function weather(now) {
+// Yr for the phone's location, or Dublin if no location is known.
+async function weather(now, place) {
+  const url = place ? "https://www.yr.no/en/forecast/daily-table/" + place.latitude.toFixed(3) + "," + place.longitude.toFixed(3) : YR;
   const old = readCache("weather");
-  if (old && old.low !== undefined && now.getTime() - old.fetchedAt < 10 * 60000) return old;
+  // Reuse for less than 5 minutes, so the refresh dot stays green only for fresh data.
+  if (old && old.url === url && now.getTime() - old.fetchedAt < 4 * 60000) return old;
   try {
-    const result = { ...parseYr(await request(YR).loadString()), fetchedAt: now.getTime() };
+    const result = { ...parseYr(await request(url).loadString()), url, fetchedAt: now.getTime() };
     // Keep today's earlier values so the low and high cover the whole day.
     const seen = readCache("temperature-range"), day = dateKey(now);
     if (seen?.day === day) {
@@ -94,8 +97,8 @@ async function weather(now) {
     return old && old.low !== undefined && now.getTime() - old.fetchedAt < 60 * 60000 ? { ...old, stale: true } : null;
   }
 }
-// Rain in the next 60 minutes at the phone's location: Open-Meteo 15-minute model forecast, not radar.
-async function rain(now) {
+// The phone's location, or the last known one.
+async function position() {
   let place = readCache("location");
   try {
     Location.setAccuracyToHundredMeters();
@@ -103,6 +106,10 @@ async function rain(now) {
     place = { latitude: found.latitude, longitude: found.longitude };
     saveCache("location", place);
   } catch (e) { console.log(String(e)); }
+  return place;
+}
+// Rain in the next 60 minutes at the phone's location: Open-Meteo 15-minute model forecast, not radar.
+async function rain(now, place) {
   if (!place) return { message: "Rain check needs location" };
   const data = await request("https://api.open-meteo.com/v1/forecast?latitude=" + place.latitude.toFixed(3) + "&longitude=" + place.longitude.toFixed(3) +
     "&minutely_15=precipitation&forecast_minutely_15=6&timeformat=unixtime").loadJSON();
@@ -315,7 +322,7 @@ function timer(parent, date) {
   item.textColor = new Color("b7a17a");
 }
 function freshnessColor(age) {
-  return age < 5 * 60000 ? "30d158" : age < 15 * 60000 ? "ff9f0a" : "ff453a";
+  return age < 5 * 60000 ? "30d158" : "ff453a";
 }
 function scale(level) {
   const dc = new DrawContext();
@@ -372,8 +379,8 @@ function trainRow(w, label, result) {
   w.addSpacer(5);
 }
 async function dashboard() {
-  const started = new Date();
-  const jobs = await Promise.allSettled([weather(started), daylight(started), timetable(started), railBoard("Sallins"), railBoard("Dublin Connolly"), luas("PAR", started), luas("ABB", started), rain(started)]);
+  const started = new Date(), place = await position();
+  const jobs = await Promise.allSettled([weather(started, place), daylight(started), timetable(started), railBoard("Sallins"), railBoard("Dublin Connolly"), luas("PAR", started), luas("ABB", started), rain(started, place)]);
   jobs.forEach(j => { if (j.status === "rejected") console.log(String(j.reason)); });
   const [yr, sun, rail, sallins, connolly, parnell, abbey, wet] = jobs.map(j => j.status === "fulfilled" ? j.value : null);
   const now = new Date(), w = new ListWidget();
@@ -409,6 +416,11 @@ async function dashboard() {
   freshness.backgroundColor = new Color("2c2c2e");
   freshness.cornerRadius = 9;
   freshness.setPadding(5, 8, 5, 8);
+  // Widgets cannot animate, so old data gets a still red outline instead of a flash.
+  if (statusColor === "ff453a") {
+    freshness.borderColor = new Color("ff453a", 0.6);
+    freshness.borderWidth = 1.5;
+  }
   text(freshness, "●", 22, statusColor, true);
   freshness.addSpacer(6);
   const refreshed = freshness.addStack();
