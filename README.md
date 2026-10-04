@@ -13,7 +13,8 @@
 A large iPhone widget for the free Scriptable app. Shows Dublin weather from Yr,
 a daylight scale and countdown, today's qualifying direct Irish Rail trains,
 and up to 5 Parnell Green Line trams, each with a connecting Abbey Street
-Red Line tram toward The Point or Connolly.
+Red Line tram toward The Point or Connolly and an estimated arrival time at work.
+A rain line shows if rain is forecast at your location in the next hour.
 
 ## Set up on your phone
 
@@ -22,6 +23,11 @@ Red Line tram toward The Point or Connolly.
 3. In Scriptable, open your existing **Dublin Dashboard** script.
 4. Replace its contents with the loader and press the run button while online.
 5. Keep the large widget selected to use **Dublin Dashboard**.
+6. For the rain line, go to **Settings → Privacy & Security → Location Services →
+   Scriptable** and select **While Using the App or Widgets**.
+
+The rain line sends your location, rounded to 3 decimal places (about 100 m),
+to Open-Meteo. If the phone cannot get a location, the widget uses the last one.
 
 The phone downloads `dashboard.js` from this repository's `main` branch each time
 the widget runs. If GitHub is unreachable or returns invalid JavaScript, it uses
@@ -44,6 +50,8 @@ for providers, source links, licence links and modification notices.
 | Rail timetable | [National Transport Authority / TFI](https://www.transportforireland.ie/transitData/PT_Data.html); CC BY 4.0 |
 | Rail predictions | [Iarnród Éireann / Irish Rail](https://api.irishrail.ie/realtime/); provider's API terms, with no named licence asserted |
 | Luas predictions | [Transport Infrastructure Ireland](https://data.gov.ie/dataset/luas-forecasting-api); CC BY 4.0 |
+| Rain next hour | [Weather data by Open-Meteo.com](https://open-meteo.com/); CC BY 4.0 |
+| Work arrival times | Ride times from the [NTA / TFI Luas timetable](https://www.transportforireland.ie/transitData/PT_Data.html), CC BY 4.0; walking distances from [OpenStreetMap](https://www.openstreetmap.org/copyright) data, © OpenStreetMap contributors, ODbL |
 
 The Yr integration reads weather values from its public webpage to preserve
 Yr's displayed feels-like temperature. It is an unofficial integration;

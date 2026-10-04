@@ -2,7 +2,7 @@
 // Updates automatically when iOS refreshes the widget. No accounts or API keys are required.
 // Original project code: MIT License, copyright (c) 2026 Sam McEntee.
 // Data sources and separate licences: https://github.com/sammcentee/dublin-dashboard/blob/main/NOTICE.md
-// Weather: MET Norway / Yr; rail: NTA / TFI and Irish Rail; Luas: TII.
+// Weather: MET Norway / Yr; rain: Open-Meteo.com; rail: NTA / TFI and Irish Rail; Luas: TII.
 // Daylight calculations: adapted from SunCalc under BSD-2-Clause; notice retained below.
 const TZ = "Europe/Dublin";
 const YR = "https://www.yr.no/en/forecast/daily-table/2-2964574/Ireland/Leinster/Dublin%20City/Dublin";
@@ -93,6 +93,23 @@ async function weather(now) {
     console.log(String(e));
     return old && old.low !== undefined && now.getTime() - old.fetchedAt < 60 * 60000 ? { ...old, stale: true } : null;
   }
+}
+// Rain in the next 60 minutes at the phone's location: Open-Meteo 15-minute model forecast, not radar.
+async function rain(now) {
+  let place = readCache("location");
+  try {
+    Location.setAccuracyToHundredMeters();
+    const found = await Promise.race([Location.current(), new Promise((_, reject) => Timer.schedule(5000, false, () => reject(new Error("Location timed out"))))]);
+    place = { latitude: found.latitude, longitude: found.longitude };
+    saveCache("location", place);
+  } catch (e) { console.log(String(e)); }
+  if (!place) return { message: "Rain check needs location" };
+  const data = await request("https://api.open-meteo.com/v1/forecast?latitude=" + place.latitude.toFixed(3) + "&longitude=" + place.longitude.toFixed(3) +
+    "&minutely_15=precipitation&forecast_minutely_15=6&timeformat=unixtime").loadJSON();
+  // Each value is the rain in the 15 minutes before its time.
+  const { time, precipitation } = data.minutely_15;
+  const i = time.findIndex((t, k) => t * 1000 > now.getTime() && (t - 900) * 1000 < now.getTime() + 60 * 60000 && precipitation[k] >= 0.1);
+  return { start: i === -1 ? null : new Date(Math.max(now.getTime(), (time[i] - 900) * 1000)) };
 }
 function weatherSymbol(code) {
   const night = /_night$/.test(code);
@@ -356,9 +373,9 @@ function trainRow(w, label, result) {
 }
 async function dashboard() {
   const started = new Date();
-  const jobs = await Promise.allSettled([weather(started), daylight(started), timetable(started), railBoard("Sallins"), railBoard("Dublin Connolly"), luas("PAR", started), luas("ABB", started)]);
+  const jobs = await Promise.allSettled([weather(started), daylight(started), timetable(started), railBoard("Sallins"), railBoard("Dublin Connolly"), luas("PAR", started), luas("ABB", started), rain(started)]);
   jobs.forEach(j => { if (j.status === "rejected") console.log(String(j.reason)); });
-  const [yr, sun, rail, sallins, connolly, parnell, abbey] = jobs.map(j => j.status === "fulfilled" ? j.value : null);
+  const [yr, sun, rail, sallins, connolly, parnell, abbey, wet] = jobs.map(j => j.status === "fulfilled" ? j.value : null);
   const now = new Date(), w = new ListWidget();
   const usableParnell = parnell && Math.abs(now - parnell.created) <= 3 * 60000 ? parnell : null;
   const usableAbbey = abbey && Math.abs(now - abbey.created) <= 3 * 60000 ? abbey : null;
@@ -401,7 +418,17 @@ async function dashboard() {
   elapsed.applyTimerStyle();
   elapsed.font = Font.semiboldMonospacedSystemFont(17);
   elapsed.textColor = new Color(statusColor);
-  w.addSpacer(8);
+  w.addSpacer(6);
+  const rainRow = w.addStack();
+  rainRow.centerAlignContent();
+  if (wet?.start) {
+    const umbrella = rainRow.addImage(SFSymbol.named("umbrella.fill").image);
+    umbrella.imageSize = new Size(14, 14);
+    umbrella.tintColor = new Color("7fb0dc");
+    rainRow.addSpacer(5);
+    text(rainRow, wet.start <= now ? "Rain now" : "Rain from " + clock(wet.start), 13, "7fb0dc", true);
+  } else text(rainRow, wet ? wet.message || "Dry next hour" : "Rain forecast unavailable", 12, "8e8e93");
+  w.addSpacer(5);
   let event;
   if (sun) {
     event = nextLight(sun, now);
@@ -425,7 +452,7 @@ async function dashboard() {
   const head = w.addStack();
   text(head, "PARNELL", 11, "8cba9a");
   text(head, "  →  ABBEY ST", 11, "c99a9a");
-  text(head, "  →  WORK", 11, "f2f2f7");
+  text(head, "  →  WORK", 11, "b4a7d6");
   head.addSpacer();
   text(head, "5 min transfer · estimated", 9, "8e8e93");
   if (!trips.length) text(w, usableParnell ? "No tram forecast" : "Luas feed unavailable", 15, "8cba9a", true);
@@ -438,7 +465,7 @@ async function dashboard() {
       text(row, clock(red.arrival), 15, "c99a9a").font = Font.semiboldMonospacedSystemFont(15);
       text(row, "  " + red.destination, 11, "c99a9a");
       text(row, "  →  ", 13, "8e8e93");
-      text(row, clock(work), 15, "f2f2f7").font = Font.semiboldMonospacedSystemFont(15);
+      text(row, clock(work), 15, "b4a7d6").font = Font.semiboldMonospacedSystemFont(15);
     } else text(row, usableAbbey ? "No connection in forecast" : "Luas feed unavailable", 13, "c99a9a", true);
   }
   const messages = [parnell?.message, abbey?.message].filter(m => m && !/operating normally/i.test(m));

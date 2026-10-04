@@ -66,6 +66,23 @@ The widget converts minute forecasts into estimated arrival times and selects
 possible Green Line to Red Line connections. The five-minute allowance from
 Parnell is calculated by this project. It is not a TII connection guarantee.
 
+## Work arrival times: NTA Luas timetable and OpenStreetMap
+
+The fixed minutes from Abbey Street to the office use scheduled ride times from
+the NTA / TFI Luas GTFS timetable under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), and walking distances
+from [OpenStreetMap](https://www.openstreetmap.org/copyright) data,
+© OpenStreetMap contributors, available under the ODbL. The project rounded
+these values to whole minutes. They are estimates, not live data.
+
+## Rain next hour: Open-Meteo
+
+[Weather data by Open-Meteo.com](https://open-meteo.com/), under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Free use is for
+non-commercial purposes; see the [Open-Meteo terms](https://open-meteo.com/en/terms).
+The widget finds the first 15-minute period with at least 0.1 mm of forecast rain
+in the next hour. This is a model forecast, not a radar observation.
+
 ## SunCalc solar calculation: BSD-2-Clause
 
 The `sunDay` function in `dashboard.js` is adapted from
