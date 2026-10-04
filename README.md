@@ -31,6 +31,9 @@ reverting in Git.
 ## Home Screen widgets
 
 These 3 widgets use the same data and dark colors as the large dashboard.
+Weather and trains use small square widgets. The Luas connection uses a medium rectangle.
+The Home Screen views show the main values with larger text and short labels.
+
 Each widget gets only its data.
 The widgets use a different folder for saved data.
 The large dashboard keeps its script and saved data.

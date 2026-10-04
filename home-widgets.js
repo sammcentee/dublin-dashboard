@@ -39,13 +39,13 @@ async function results(jobs) {
 function header(widget, label, now, age) {
   const row = widget.addStack();
   row.centerAlignContent();
-  text(row, label, 9, "aeaeb2", true);
+  text(row, label, 12, "aeaeb2", true);
   row.addSpacer();
   const color = api.freshnessColor(age);
   text(row, "● ", 14, color, true);
   const elapsed = row.addDate(now);
   elapsed.applyTimerStyle();
-  elapsed.font = Font.semiboldMonospacedSystemFont(10);
+  elapsed.font = Font.semiboldMonospacedSystemFont(11);
   elapsed.textColor = new Color(color);
   elapsed.lineLimit = 1;
   elapsed.minimumScaleFactor = 0.75;
@@ -61,70 +61,61 @@ let event, green;
 if (view === "weather") {
   const [yr, sun] = await results([api.weather(started), api.daylight(started)]);
   const now = new Date();
-  header(w, "WEATHER", now, yr ? now.getTime() - yr.fetchedAt : Infinity);
+  header(w, "Yr", now, yr ? now.getTime() - yr.fetchedAt : Infinity);
   const temperature = w.addStack();
   temperature.centerAlignContent();
-  text(temperature, yr ? Math.round(yr.temperature) + "°C" : "Unavailable", yr ? 28 : 17, "f2f2f7", true);
+  text(temperature, yr ? Math.round(yr.temperature) + "°" : "Unavailable", yr ? 34 : 17, "f2f2f7", true);
   if (yr) {
     temperature.addSpacer();
     const feels = temperature.addStack();
     feels.layoutVertically();
-    text(feels, "Feels like", 8, "aeaeb2");
-    text(feels, Math.round(yr.feelsLike) + "°C", 12, "aeaeb2", true);
-    text(w, (yr.description || "Conditions unavailable") + (yr.stale ? " · cached" : ""), 10, "8e8e93").lineLimit = 2;
+    text(feels, "Feels like", 10, "aeaeb2");
+    text(feels, Math.round(yr.feelsLike) + "°", 16, "aeaeb2", true);
+    text(w, yr.description || "Conditions unavailable", 11, "aeaeb2").lineLimit = 2;
   }
-  w.addSpacer(4);
+  w.addSpacer(2);
   event = sun && api.nextLight(sun, now);
   if (event) {
     const row = w.addStack();
-    text(row, event.name === "Bright again" ? "Bright in " : "Dark in ", 9, "b7a17a");
+    text(row, event.name === "Bright again" ? "Bright in " : "Dark in ", 10, "b7a17a");
     const countdown = row.addDate(event.date);
     countdown.applyTimerStyle();
-    countdown.font = Font.semiboldMonospacedSystemFont(11);
+    countdown.font = Font.semiboldMonospacedSystemFont(15);
     countdown.textColor = new Color("b7a17a");
     countdown.lineLimit = 1;
     countdown.minimumScaleFactor = 0.75;
   } else text(w, "Daylight unavailable", 10, "b7a17a");
   const today = sun?.days.find(day => day.date === api.isoDay(api.dateKey(now)));
   if (today) {
-    const bar = w.addStack();
-    bar.centerAlignContent();
-    text(bar, "Dark ", 8, "8e8e93");
-    bar.addImage(api.scale(api.lightLevel(today, now))).imageSize = new Size(78, 3);
-    text(bar, " Bright", 8, "b7a17a");
+    w.addSpacer(2);
+    w.addImage(api.scale(api.lightLevel(today, now))).imageSize = new Size(124, 3);
   }
   w.addSpacer();
-  text(w, "Yr · MET Norway · SunCalc", 7, "8e8e93");
+  text(w, "MET Norway", 9, "8e8e93");
 } else if (view === "trains") {
   const [rail, sallins, connolly] = await results([api.timetable(started), api.railBoard("Sallins"), api.railBoard("Dublin Connolly")]);
   const now = new Date();
-  header(w, "TRAINS", now, rail && !rail.unverified && sallins && connolly ? now - started : Infinity);
-  for (const [route, label, cutoff, board] of [
-    ["sallinsHeuston", "Sallins → Heuston", "22:00", sallins],
-    ["connollySallins", "Connolly → Sallins", "18:00", connolly]
+  header(w, api.dayLabel(now).replace(/^\S+\s+/, ""), now, rail && !rail.unverified && sallins && connolly ? now - started : Infinity);
+  for (const [route, label, board] of [
+    ["sallinsHeuston", "Sallins → Heuston", sallins],
+    ["connollySallins", "Connolly → Sallins", connolly]
   ]) {
     const train = rail ? api.nextTrain(rail.data, route, now, board || []) : { message: "Timetable unavailable" };
-    text(w, label, 9, "8eafcf", true);
+    text(w, label, 12, "8eafcf", true);
     if (train.departure) {
       const row = w.addStack();
       row.centerAlignContent();
-      text(row, clock(train.departure), 20, "8eafcf", true);
+      text(row, clock(train.departure), 26, "8eafcf", true);
       row.addSpacer();
-      const detail = row.addStack();
-      detail.layoutVertically();
-      text(detail, "After " + cutoff, 8, "8e8e93");
-      text(detail, train.live ? "live" : "scheduled", 8, "8e8e93");
+      text(row, train.live ? "live" : "scheduled", 10, "8e8e93");
     } else {
-      const message = train.message === "TFI timetable needs refresh" ? "Refresh timetable" : train.message;
-      text(w, message, 11, "8eafcf", true).lineLimit = 2;
-      text(w, "After " + cutoff, 8, "8e8e93");
+      const message = train.message === "TFI timetable needs refresh" ? "Refresh timetable" : train.message === "No direct service today" ? "No service today" : train.message;
+      text(w, message, 13, "8eafcf", true).lineLimit = 2;
     }
     w.addSpacer(3);
   }
   w.addSpacer();
-  text(w, api.dayLabel(now) + " · direct", 8, "8e8e93");
-  if (rail?.unverified) text(w, "Timetable unchecked", 8, "ff9f0a");
-  text(w, "NTA/TFI · Irish Rail", 7, "8e8e93");
+  text(w, "NTA/TFI · Irish Rail" + (rail?.unverified ? " · old" : ""), 9, "8e8e93");
 } else if (view === "luas") {
   const feeds = await results([api.luas("PAR", started), api.luas("ABB", started)]);
   const now = new Date();
@@ -132,27 +123,25 @@ if (view === "weather") {
   const connection = api.connection(parnell, abbey, now);
   green = connection.green;
   const red = connection.red;
-  header(w, "LUAS CONNECTION", now, parnell && abbey ? now - Math.min(parnell.created.getTime(), abbey.created.getTime()) : Infinity);
+  header(w, "TII/Luas", now, parnell && abbey ? now - Math.min(parnell.created.getTime(), abbey.created.getTime()) : Infinity);
+  w.addSpacer();
   const stops = w.addStack();
-  for (const [label, line, value, detail, color] of [
-    ["Parnell", "Green Line · southbound", green ? green.dueNow ? "Due" : clock(green.arrival) : parnell ? "No tram forecast" : "Feed unavailable", green?.destination || "", "8cba9a"],
-    ["Abbey Street", "Red Line → The Point", red ? clock(red.arrival) : !green ? "No Green Line tram" : abbey ? "No connection yet" : "Feed unavailable", red ? "Catchable connection" : "", "c99a9a"]
+  for (const [label, value, color] of [
+    ["Parnell", green ? green.dueNow ? "Due" : clock(green.arrival) : parnell ? "No forecast" : "Unavailable", "8cba9a"],
+    ["Abbey St → Point", red ? clock(red.arrival) : abbey ? "No connection" : "Unavailable", "c99a9a"]
   ]) {
     const stop = stops.addStack();
     stop.layoutVertically();
     stop.size = new Size(128, 0);
-    text(stop, label, 11, color, true);
-    text(stop, line, 9, color);
-    text(stop, value, /^\d\d:\d\d$/.test(value) || value === "Due" ? 23 : 11, color, true).lineLimit = 2;
-    if (detail) text(stop, detail, 9, "8e8e93");
+    text(stop, label, 13, color, true);
+    text(stop, value, /^\d\d:\d\d$/.test(value) || value === "Due" ? 32 : 14, color, true).lineLimit = 2;
+    if (label !== "Parnell" && red) text(stop, "Est.", 11, "8e8e93");
     if (label === "Parnell") stops.addSpacer();
   }
   w.addSpacer(3);
-  text(w, "Estimated · 7 min from Parnell via Marlborough", 9, "8e8e93");
   const messages = feeds.map(feed => feed?.message).filter(message => message && !/operating normally/i.test(message));
-  if (messages.length) text(w, [...new Set(messages)].join(" · "), 8, "ff9f0a").lineLimit = 2;
+  if (messages.length) text(w, "Service alert", 12, "ff9f0a");
   w.addSpacer();
-  text(w, "TII/Luas", 8, "8e8e93");
 }
 let refresh = Date.now() + 2 * 60000;
 if (event) refresh = Math.min(refresh, event.date.getTime() + 1000);

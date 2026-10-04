@@ -157,9 +157,9 @@ function phone() {
 }
 
 for (const [name, size, heading, credit, provider] of [
-  ['Weather', 'small', 'WEATHER', 'Yr · MET Norway · SunCalc', 'yr.no'],
-  ['Trains', 'small', 'TRAINS', 'NTA/TFI · Irish Rail', 'api.irishrail.ie'],
-  ['Luas', 'medium', 'LUAS CONNECTION', 'TII/Luas', 'luasforecasts']
+  ['Weather', 'small', 'Yr', 'MET Norway', 'yr.no'],
+  ['Trains', 'small', '5 Oct', 'NTA/TFI · Irish Rail', 'api.irishrail.ie'],
+  ['Luas', 'medium', 'Parnell', 'TII/Luas', 'luasforecasts']
 ]) test(name + ' uses its own feeds, size, and cache', async () => {
   const p = phone(); p.app = true;
   const text = await p.run(name);
@@ -175,9 +175,9 @@ for (const [name, size, heading, credit, provider] of [
 });
 
 for (const [parameter, family, heading, credit] of [
-  ['weather', 'small', 'WEATHER', 'Yr · MET Norway · SunCalc'],
-  ['trains', 'small', 'TRAINS', 'NTA/TFI · Irish Rail'],
-  ['luas', 'medium', 'LUAS CONNECTION', 'TII/Luas']
+  ['weather', 'small', 'Yr', 'MET Norway'],
+  ['trains', 'small', '5 Oct', 'NTA/TFI · Irish Rail'],
+  ['luas', 'medium', 'Parnell', 'TII/Luas']
 ]) test('existing Dashboard loader selects ' + parameter + ' without new phone code', async () => {
   const p = phone(); p.parameter = parameter; p.family = family; p.app = true;
   const text = await p.run('Dashboard');
@@ -205,11 +205,11 @@ test('the existing Dashboard loader keeps compact views on download failures', a
     if (failure === 'offline') p.fail.add(url);
     if (failure === 'http') p.status.set(url, 404);
     if (failure === 'syntax') p.bodies.set(url, '<html>invalid JavaScript</html>');
-    assert.ok((await p.run('Dashboard')).includes('12°C'));
+    assert.ok((await p.run('Dashboard')).includes('12°'));
     assert.equal(p.files.get(homeCache + 'home-source.js'), homeCode);
   }
   p.fail.add(github + 'dashboard.js');
-  assert.ok((await p.run('Dashboard')).includes('12°C'));
+  assert.ok((await p.run('Dashboard')).includes('12°'));
   const first = phone(); first.parameter = 'weather'; first.family = 'small'; first.fail.add(url);
   await assert.rejects(first.run('Dashboard'), /Use the internet for the first run/);
 });
@@ -217,9 +217,9 @@ test('the existing Dashboard loader keeps compact views on download failures', a
 test('weather keeps Yr values, daylight scale, next event, and data age colors', async () => {
   const p = phone();
   let text = await p.run('Weather');
-  for (const value of ['12°C', 'Feels like', '10°C', 'Light rain', 'Dark in ']) assert.ok(text.includes(value));
+  for (const value of ['12°', 'Feels like', '10°', 'Light rain', 'Dark in ']) assert.ok(text.includes(value));
   const image = p.rendered.find(item => item.image);
-  assert.equal(image.imageSize.width, 78);
+  assert.equal(image.imageSize.width, 124);
   assert.ok(image.image.fills[1].width > 2 && image.image.fills[1].width < 170);
   assert.equal(p.rendered.filter(item => item.timer).length, 2);
   const cached = JSON.parse(p.files.get(homeCache + 'weather.json'));
@@ -229,7 +229,7 @@ test('weather keeps Yr values, daylight scale, next event, and data age colors',
   p.files.set(homeCache + 'weather.json', JSON.stringify({ ...cached, fetchedAt: p.time - 16 * 60000 }));
   p.fail.add(p.requests.find(url => url.includes('yr.no')) || 'https://www.yr.no/en/forecast/daily-table/2-2964574/Ireland/Leinster/Dublin%20City/Dublin');
   text = await p.run('Weather');
-  assert.ok(text.includes('Light rain · cached'));
+  assert.ok(text.includes('Light rain'));
   assert.equal(p.rendered.find(item => item.value === '● ').textColor.hex, 'ff453a');
   p.time = Date.parse('2026-10-05T23:30:00Z');
   text = await p.run('Weather');
@@ -242,7 +242,8 @@ test('trains keep cutoffs, dates, live delays, cancellations, and today only', a
   let text = await p.run('Trains');
   assert.ok(text.includes('22:11')); assert.ok(text.includes('18:32'));
   assert.ok(!text.includes('22:00') && !text.includes('18:00'));
-  assert.ok(text.includes('Mon 5 Oct · direct')); assert.equal(text.filter(value => value === 'scheduled').length, 2);
+  assert.ok(text.includes('5 Oct')); assert.equal(text.filter(value => value === 'scheduled').length, 2);
+  assert.ok(text.includes('Sallins → Heuston') && text.includes('Connolly → Sallins'));
   assert.equal(p.rendered.find(item => item.value === '22:11').textColor.hex, '8eafcf');
   p.app = true;
   p.time = Date.parse('2026-10-05T21:12:00Z');
@@ -255,25 +256,25 @@ test('trains keep cutoffs, dates, live delays, cancellations, and today only', a
   assert.equal(text.filter(value => value === 'No more today').length, 2);
   p.time = Date.parse('2026-10-10T12:00:00Z'); p.live = null;
   text = await p.run('Trains');
-  assert.ok(text.includes('No direct service today')); assert.ok(!text.includes('18:32'));
+  assert.ok(text.includes('No service today')); assert.ok(!text.includes('18:32'));
 });
 
 test('Luas selects the catchable tram and rejects stale or absent forecasts', async () => {
   const p = phone();
   let text = await p.run('Luas');
   assert.ok(text.includes('17:02')); assert.ok(text.includes('17:09')); assert.ok(!text.includes('17:08'));
-  assert.ok(text.includes('Estimated · 7 min from Parnell via Marlborough'));
+  assert.ok(text.includes('Parnell') && text.includes('Abbey St → Point') && text.includes('Est.'));
   assert.equal(p.rendered.find(item => item.value === '17:02').textColor.hex, '8cba9a');
   assert.equal(p.rendered.find(item => item.value === '17:09').textColor.hex, 'c99a9a');
   const abbey = p.requests.find(url => url.includes('stop=ABB'));
   p.fail.add(abbey);
   text = await p.run('Luas');
-  assert.ok(text.includes('17:02')); assert.ok(text.includes('Feed unavailable'));
+  assert.ok(text.includes('17:02')); assert.ok(text.includes('Unavailable'));
   assert.equal(p.rendered.find(item => item.value === '● ').textColor.hex, 'ff453a');
   p.fail.clear(); p.feedAge = 4 * 60000;
   text = await p.run('Luas');
   assert.ok(!text.includes('17:02') && !text.includes('17:09'));
-  assert.ok(text.includes('No Green Line tram'));
+  assert.equal(text.filter(value => value === 'Unavailable').length, 2);
 });
 
 test('small trains preserve expired fallback warnings without competing with route labels', async () => {
@@ -282,11 +283,23 @@ test('small trains preserve expired fallback warnings without competing with rou
   p.fail.add(github + 'rail.json');
   const text = await p.run('Trains');
   assert.equal(text.filter(value => value === 'Refresh timetable').length, 2);
-  assert.ok(text.includes('Timetable unchecked'));
-  assert.ok(text.includes('Sun 13 Dec · direct'));
-  assert.ok(text.includes('After 22:00') && text.includes('After 18:00'));
+  assert.ok(text.includes('NTA/TFI · Irish Rail · old'));
+  assert.ok(text.includes('13 Dec'));
   assert.equal(p.widget.children.filter(item => item.value === 'Refresh timetable').length, 2);
   assert.equal(p.rendered.find(item => item.value === '● ').textColor.hex, 'ff453a');
+});
+
+test('Luas keeps service alerts visible without long provider messages', async () => {
+  const p = phone();
+  await p.run('Luas');
+  const parnell = p.requests.find(url => url.includes('stop=PAR'));
+  const message = 'Green Line services delayed between Parnell and Marlborough';
+  p.bodies.set(parnell, '<stopInfo created="' + stamp(p.time) + '"><message>' + message +
+    '</message><direction name="Outbound"><tram destination="Bride’s Glen" dueMins="2"/></direction></stopInfo>');
+  const text = await p.run('Luas');
+  assert.ok(text.includes('17:02') && text.includes('17:09'));
+  assert.ok(text.includes('Service alert'));
+  assert.ok(!text.includes(message));
 });
 
 test('both code downloads keep saved code on offline, HTTP, syntax, and format failures', async () => {
@@ -301,7 +314,7 @@ test('both code downloads keep saved code on offline, HTTP, syntax, and format f
       if (failure === 'http') p.status.set(url, 404);
       if (failure === 'syntax') p.bodies.set(url, '<html>invalid JavaScript</html>');
       if (failure === 'format') p.bodies.set(url, dashboardCode.replace('// Run the dashboard.', '// Changed format.'));
-      assert.ok((await p.run('Weather')).includes('12°C'));
+      assert.ok((await p.run('Weather')).includes('12°'));
       assert.equal(p.files.get(homeCache + (file === 'dashboard.js' ? 'data-source.js' : 'home-source.js')), saved);
     }
   }
@@ -313,7 +326,7 @@ test('both code downloads keep saved code on offline, HTTP, syntax, and format f
 
 test('a new compact script replaces saved code before Script.complete', async () => {
   const p = phone(); await p.run('Weather');
-  const next = homeCode.replace('"WEATHER"', '"NEW WEATHER"');
+  const next = homeCode.replace('"Yr"', '"NEW WEATHER"');
   p.bodies.set(github + 'home-widgets.js', next);
   assert.ok((await p.run('Weather')).includes('NEW WEATHER'));
   assert.equal(p.files.get(homeCache + 'home-source.js'), next);
