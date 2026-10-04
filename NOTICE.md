@@ -63,7 +63,7 @@ under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 - [Forecast API](https://luasforecasts.rpa.ie/xml/get.ashx?action=forecast&stop=PAR&encrypt=false)
 
 The widget converts minute forecasts into estimated arrival times and selects
-a possible Green Line to Red Line connection. The seven-minute allowance from
+possible Green Line to Red Line connections. The five-minute allowance from
 Parnell is calculated by this project. It is not a TII connection guarantee.
 
 ## SunCalc solar calculation: BSD-2-Clause

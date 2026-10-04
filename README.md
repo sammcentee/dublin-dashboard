@@ -12,7 +12,8 @@
 
 A large iPhone widget for the free Scriptable app. Shows Dublin weather from Yr,
 a daylight scale and countdown, today's qualifying direct Irish Rail trains,
-and a Parnell-to-Abbey Street Luas connection toward The Point.
+and up to 5 Parnell Green Line trams, each with a connecting Abbey Street
+Red Line tram toward The Point or Connolly.
 
 ## Set up on your phone
 

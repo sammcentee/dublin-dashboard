@@ -231,11 +231,10 @@ async function luas(stop, now) {
   const xml = await request("https://luasforecasts.rpa.ie/xml/get.ashx?action=forecast&stop=" + stop + "&encrypt=false").loadString();
   return parseLuas(xml, now);
 }
-function connection(parnell, abbey, now) {
+function connections(parnell, abbey, now) {
   const upcoming = (feed, match) => (feed?.trams || []).filter(match).map(t => t.dueNow && now - feed.created < 60000 ? { ...t, arrival: new Date(now) } : t).filter(t => t.arrival >= now);
-  const green = upcoming(parnell, t => t.direction === "Outbound")[0];
-  const red = green && upcoming(abbey, t => t.direction === "Inbound" && t.destination === "The Point").find(t => t.arrival - green.arrival >= 7 * 60000);
-  return { green, red };
+  const reds = upcoming(abbey, t => t.direction === "Inbound" && ["The Point", "Connolly"].includes(t.destination));
+  return upcoming(parnell, t => t.direction === "Outbound").slice(0, 5).map(green => ({ green, red: reds.find(t => t.arrival - green.arrival >= 5 * 60000) }));
 }
 
 async function timetable(now) {
@@ -348,13 +347,23 @@ async function dashboard() {
   w.addSpacer(8);
   trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || []) : { message: "TFI timetable unavailable" });
   trainRow(w, "CONNOLLY → SALLINS · after 18:00 · direct", rail ? nextTrain(rail.data, "connollySallins", now, connolly || []) : { message: "TFI timetable unavailable" });
-  const { green, red } = connection(usableParnell, usableAbbey, now);
-  text(w, "PARNELL · southbound Green Line", 11, "8cba9a");
-  text(w, green ? (green.dueNow ? "Due" : clock(green.arrival)) + " · " + green.destination : usableParnell ? "No tram forecast" : "Luas feed unavailable", 17, "8cba9a", true);
-  w.addSpacer(5);
-  text(w, "ABBEY STREET → THE POINT · connecting tram", 11, "c99a9a");
-  text(w, red ? clock(red.arrival) + " · estimated connection" : !green ? "Awaiting Parnell tram" : usableAbbey ? "No connection in forecast" : "Luas feed unavailable", 17, "c99a9a", true);
-  text(w, "7 min from Parnell · via Marlborough", 9, "8e8e93");
+  const trips = connections(usableParnell, usableAbbey, now);
+  const head = w.addStack();
+  text(head, "PARNELL", 11, "8cba9a");
+  text(head, "  →  ABBEY STREET", 11, "c99a9a");
+  head.addSpacer();
+  text(head, "5 min transfer · estimated", 9, "8e8e93");
+  if (!trips.length) text(w, usableParnell ? "No tram forecast" : "Luas feed unavailable", 15, "8cba9a", true);
+  for (const { green, red } of trips) {
+    const row = w.addStack();
+    row.centerAlignContent();
+    text(row, green.dueNow ? "Due  " : clock(green.arrival), 15, "8cba9a").font = Font.semiboldMonospacedSystemFont(15);
+    text(row, "  →  ", 13, "8e8e93");
+    if (red) {
+      text(row, clock(red.arrival), 15, "c99a9a").font = Font.semiboldMonospacedSystemFont(15);
+      text(row, "  " + red.destination, 11, "c99a9a");
+    } else text(row, usableAbbey ? "No connection in forecast" : "Luas feed unavailable", 13, "c99a9a", true);
+  }
   const messages = [parnell?.message, abbey?.message].filter(m => m && !/operating normally/i.test(m));
   if (messages.length) text(w, [...new Set(messages)].join(" · "), 9, "ff9f0a");
   w.addSpacer();
@@ -366,7 +375,7 @@ async function dashboard() {
   text(sources, "SunCalc", 8, "8e8e93");
   let refresh = now.getTime() + 2 * 60000;
   if (event) refresh = Math.min(refresh, event.date.getTime() + 1000);
-  if (green) refresh = Math.min(refresh, green.arrival.getTime() + 15000);
+  if (trips.length) refresh = Math.min(refresh, trips[0].green.arrival.getTime() + 15000);
   w.refreshAfterDate = new Date(refresh);
   Script.setWidget(w);
   if (config.runsInApp) await w.presentLarge();
