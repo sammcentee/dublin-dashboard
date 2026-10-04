@@ -260,7 +260,7 @@ async function timetable(now) {
   return { data, unverified: !data.checkedAt || now.getTime() - data.checkedAt > 24 * 3600000 };
 }
 
-function text(parent, value, size, color = "ffffff", bold = false) {
+function text(parent, value, size, color = "f2f2f7", bold = false) {
   const item = parent.addText(String(value));
   item.font = bold ? Font.semiboldSystemFont(size) : Font.systemFont(size);
   item.textColor = new Color(color);
@@ -272,26 +272,26 @@ function timer(parent, date) {
   const item = parent.addDate(date);
   item.applyTimerStyle();
   item.font = Font.semiboldMonospacedSystemFont(17);
-  item.textColor = new Color("f8d574");
+  item.textColor = new Color("c7c7cc");
 }
 function freshnessColor(age) {
-  return age < 5 * 60000 ? "75d5b1" : age < 15 * 60000 ? "f6b55a" : "f07878";
+  return age < 5 * 60000 ? "30d158" : age < 15 * 60000 ? "ff9f0a" : "ff453a";
 }
 function scale(level) {
   const dc = new DrawContext();
-  dc.size = new Size(170, 8);
+  dc.size = new Size(170, 6);
   dc.opaque = false;
   dc.respectScreenScale = true;
-  dc.setFillColor(new Color("394456"));
-  dc.fillRect(new Rect(0, 0, 170, 8));
-  dc.setFillColor(new Color("f8d574"));
-  dc.fillRect(new Rect(0, 0, Math.max(2, level * 170), 8));
+  dc.setFillColor(new Color("3a3a3c"));
+  dc.fillRect(new Rect(0, 0, 170, 6));
+  dc.setFillColor(new Color("636366"));
+  dc.fillRect(new Rect(0, 0, Math.max(2, level * 170), 6));
   return dc.getImage();
 }
 function trainRow(w, label, result) {
-  text(w, label, 11, "b8c4d4");
-  if (result.message) text(w, result.message, 17, "ffffff", true);
-  else text(w, clock(result.departure) + " · " + dayLabel(result.departure) + " · " + (result.live ? "live" : "scheduled"), 17, "ffffff", true);
+  text(w, label, 11, "aeaeb2");
+  if (result.message) text(w, result.message, 17, "f2f2f7", true);
+  else text(w, clock(result.departure) + " · " + dayLabel(result.departure) + " · " + (result.live ? "live" : "scheduled"), 17, "f2f2f7", true);
   w.addSpacer(5);
 }
 async function dashboard() {
@@ -300,13 +300,35 @@ async function dashboard() {
   jobs.forEach(j => { if (j.status === "rejected") console.log(String(j.reason)); });
   const [yr, sun, rail, sallins, connolly, parnell, abbey] = jobs.map(j => j.status === "fulfilled" ? j.value : null);
   const now = new Date(), w = new ListWidget();
-  w.backgroundColor = new Color("142033");
+  const usableParnell = parnell && Math.abs(now - parnell.created) <= 3 * 60000 ? parnell : null;
+  const usableAbbey = abbey && Math.abs(now - abbey.created) <= 3 * 60000 ? abbey : null;
+  const dataAge = !rail || rail.unverified || !sallins || !connolly ? Infinity :
+    now.getTime() - Math.min(yr?.fetchedAt || 0, usableParnell?.created.getTime() || 0, usableAbbey?.created.getTime() || 0);
+  const statusColor = freshnessColor(dataAge);
+  w.backgroundColor = new Color("1c1c1e");
   w.setPadding(13, 15, 12, 15);
-  text(w, "DUBLIN  ·  " + dayLabel(now) + "  ·  " + clock(now), 11, "b8c4d4", true);
+  const header = w.addStack();
+  header.centerAlignContent();
+  text(header, "DUBLIN  ·  " + dayLabel(now), 11, "aeaeb2", true);
+  header.addSpacer();
+  const freshness = header.addStack();
+  freshness.centerAlignContent();
+  freshness.backgroundColor = new Color("2c2c2e");
+  freshness.cornerRadius = 9;
+  freshness.setPadding(5, 8, 5, 8);
+  text(freshness, "●", 22, statusColor, true);
+  freshness.addSpacer(6);
+  const refreshed = freshness.addStack();
+  refreshed.layoutVertically();
+  text(refreshed, "REFRESHED " + clock(now), 8, "aeaeb2", true);
+  const elapsed = refreshed.addDate(now);
+  elapsed.applyTimerStyle();
+  elapsed.font = Font.semiboldMonospacedSystemFont(17);
+  elapsed.textColor = new Color(statusColor);
   w.addSpacer(6);
-  text(w, yr ? Math.round(yr.temperature) + "°C  ·  feels " + Math.round(yr.feelsLike) + "°C" : "Yr weather unavailable", 23, "ffffff", true);
+  text(w, yr ? Math.round(yr.temperature) + "°C  ·  feels " + Math.round(yr.feelsLike) + "°C" : "Yr weather unavailable", 23, "f2f2f7", true);
   const yrTime = yr?.updatedAt ? " · " + clock(new Date(yr.updatedAt)) : "";
-  text(w, (yr ? (yr.description || "Conditions unavailable") + " · " : "") + "Yr · MET Norway" + yrTime + (yr?.stale ? " · cached" : ""), 11, "9eafc5");
+  text(w, (yr ? (yr.description || "Conditions unavailable") + " · " : "") + "Yr · MET Norway" + yrTime + (yr?.stale ? " · cached" : ""), 11, "8e8e93");
   w.addSpacer(5);
   let event;
   if (sun) {
@@ -318,43 +340,31 @@ async function dashboard() {
     if (today) {
       const bar = w.addStack();
       bar.centerAlignContent();
-      text(bar, "Dark  ", 9, "9eafc5");
+      text(bar, "Dark  ", 9, "8e8e93");
       const image = bar.addImage(scale(lightLevel(today, now)));
-      image.imageSize = new Size(170, 8);
-      text(bar, "  Bright", 9, "f8d574");
+      image.imageSize = new Size(170, 6);
+      text(bar, "  Bright", 9, "8e8e93");
     }
   } else text(w, "Daylight unavailable", 13);
   w.addSpacer(8);
   trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || []) : { message: "TFI timetable unavailable" });
   trainRow(w, "CONNOLLY → SALLINS · after 18:00 · direct", rail ? nextTrain(rail.data, "connollySallins", now, connolly || []) : { message: "TFI timetable unavailable" });
-  const usableParnell = parnell && Math.abs(now - parnell.created) <= 3 * 60000 ? parnell : null;
-  const usableAbbey = abbey && Math.abs(now - abbey.created) <= 3 * 60000 ? abbey : null;
   const { green, red } = connection(usableParnell, usableAbbey, now);
-  text(w, "PARNELL · southbound Green Line", 11, "b8c4d4");
-  text(w, green ? (green.dueNow ? "Due" : clock(green.arrival)) + " · " + green.destination : usableParnell ? "No tram forecast" : "Luas feed unavailable", 17, "ffffff", true);
+  text(w, "PARNELL · southbound Green Line", 11, "aeaeb2");
+  text(w, green ? (green.dueNow ? "Due" : clock(green.arrival)) + " · " + green.destination : usableParnell ? "No tram forecast" : "Luas feed unavailable", 17, "f2f2f7", true);
   w.addSpacer(5);
-  text(w, "ABBEY STREET → THE POINT · connecting tram", 11, "b8c4d4");
-  text(w, red ? clock(red.arrival) + " · estimated connection" : !green ? "Awaiting Parnell tram" : usableAbbey ? "No connection in forecast" : "Luas feed unavailable", 17, "ffffff", true);
-  text(w, "7 min from Parnell · via Marlborough", 9, "9eafc5");
+  text(w, "ABBEY STREET → THE POINT · connecting tram", 11, "aeaeb2");
+  text(w, red ? clock(red.arrival) + " · estimated connection" : !green ? "Awaiting Parnell tram" : usableAbbey ? "No connection in forecast" : "Luas feed unavailable", 17, "f2f2f7", true);
+  text(w, "7 min from Parnell · via Marlborough", 9, "8e8e93");
   const messages = [parnell?.message, abbey?.message].filter(m => m && !/operating normally/i.test(m));
-  if (messages.length) text(w, [...new Set(messages)].join(" · "), 9, "f8d574");
+  if (messages.length) text(w, [...new Set(messages)].join(" · "), 9, "ff9f0a");
   w.addSpacer();
   const sources = w.addStack();
-  text(sources, "NTA/TFI " + (rail?.data.retrievedAt || "") + (rail?.unverified ? " · unchecked" : ""), 8, "9eafc5");
+  text(sources, "NTA/TFI " + (rail?.data.retrievedAt || "") + (rail?.unverified ? " · unchecked" : ""), 8, "8e8e93");
   sources.addSpacer();
-  text(sources, "Irish Rail · TII/Luas" + (usableParnell ? " " + clock(usableParnell.created) : ""), 8, "9eafc5");
+  text(sources, "Irish Rail · TII/Luas" + (usableParnell ? " " + clock(usableParnell.created) : ""), 8, "8e8e93");
   sources.addSpacer();
-  text(sources, "SunCalc", 8, "9eafc5");
-  const dataAge = !rail || rail.unverified || !sallins || !connolly ? Infinity :
-    now.getTime() - Math.min(yr?.fetchedAt || 0, usableParnell?.created.getTime() || 0, usableAbbey?.created.getTime() || 0);
-  const freshness = w.addStack();
-  freshness.centerAlignContent();
-  text(freshness, "●", 11, freshnessColor(dataAge));
-  text(freshness, " Refreshed " + clock(now) + " · elapsed ", 9, "9eafc5");
-  const elapsed = freshness.addDate(now);
-  elapsed.applyTimerStyle();
-  elapsed.font = Font.semiboldMonospacedSystemFont(10);
-  elapsed.textColor = new Color("b8c4d4");
+  text(sources, "SunCalc", 8, "8e8e93");
   let refresh = now.getTime() + 2 * 60000;
   if (event) refresh = Math.min(refresh, event.date.getTime() + 1000);
   if (green) refresh = Math.min(refresh, green.arrival.getTime() + 15000);
