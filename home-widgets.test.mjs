@@ -111,6 +111,8 @@ function phone() {
     async presentSmall() { state.previews.push('small'); }
     async presentMedium() { state.previews.push('medium'); }
     async presentLarge() { state.previews.push('large'); }
+    async presentAccessoryCircular() { state.previews.push('accessoryCircular'); }
+    async presentAccessoryRectangular() { state.previews.push('accessoryRectangular'); }
     layoutVertically() { this.vertical = true; }
   }
   const context = vm.createContext({
@@ -142,7 +144,8 @@ function phone() {
     state.rendered.length = 0; state.requests.length = 0; state.writes.length = 0; state.complete = false;
     await vm.runInContext('(async () => {\n' + source('./Dublin ' + name + '.js') + '\n})()', context);
     assert.equal(state.complete, true);
-    assert.equal(state.widget.backgroundColor.hex, '1c1c1e');
+    if (state.family?.startsWith('accessory')) assert.equal(state.widget.backgroundColor, undefined);
+    else assert.equal(state.widget.backgroundColor.hex, '1c1c1e');
     assert.equal(state.widget.url, undefined);
     if (preserveLargeCache) {
       assert.equal(state.files.get(originalCache), 'large widget data');
@@ -176,6 +179,81 @@ function contentBudget(item, availableWidth, vertical = true) {
   const lines = item.lineLimit > 1 ? Math.min(item.lineLimit, Math.ceil(width / availableWidth)) : 1;
   return { width: lines > 1 ? Math.min(width, availableWidth) : width, height: item.font * 1.35 * lines };
 }
+
+test('Lock Screen views fit a safe square inside the smallest circle and the smallest rectangle', async () => {
+  // Apple lists 68 pt circles and 153 x 68 pt rectangles. These are conservative limits, not measured Air frames.
+  for (const [view, family, change] of [
+    ['weather', 'accessoryCircular'], ['trains', 'accessoryCircular'], ['luas', 'accessoryRectangular'],
+    ['weather', 'accessoryCircular', async p => {
+      await p.run('Dashboard');
+      const cached = JSON.parse(p.files.get(homeCache + 'weather.json'));
+      p.files.set(homeCache + 'weather.json', JSON.stringify({ ...cached,
+        temperature: -12, feelsLike: -18, description: 'Heavy thunderstorms and rain showers' }));
+    }],
+    ['trains', 'accessoryCircular', p => { p.time = Date.parse('2026-12-13T12:00:00Z'); p.fail.add(github + 'rail.json'); }],
+    ['luas', 'accessoryRectangular', p => { p.feedAge = 4 * 60000; }]
+  ]) {
+    const p = phone(); p.parameter = view; p.family = family; p.app = true;
+    if (change) await change(p);
+    p.previews.length = 0;
+    await p.run('Dashboard');
+    const width = family === 'accessoryCircular' ? 68 : 153;
+    const budget = contentBudget(p.widget, width);
+    assert.ok(budget.width <= width, view + ' width: ' + budget.width);
+    assert.ok(budget.height <= 68, view + ' height: ' + budget.height);
+    if (family === 'accessoryCircular') {
+      const [top, left, bottom, right] = p.widget.padding;
+      assert.ok(Math.hypot(width - left - right, 68 - top - bottom) < 68);
+    }
+    assert.deepEqual(p.previews, [family]);
+  }
+});
+
+test('Lock Screen weather keeps both temperatures, conditions, daylight and visible stale warnings', async () => {
+  const p = phone(); p.parameter = 'weather'; p.family = 'accessoryCircular';
+  let values = await p.run('Dashboard');
+  for (const value of ['12°', 'F10° Rain', 'D', '●']) assert.ok(values.includes(value));
+  assert.equal(p.rendered.filter(item => item.timer).length, 1);
+  assert.equal(p.rendered.find(item => item.image).imageSize.width, 40);
+  const cached = JSON.parse(p.files.get(homeCache + 'weather.json'));
+  p.files.set(homeCache + 'weather.json', JSON.stringify({ ...cached, fetchedAt: p.time - 6 * 60000 }));
+  assert.ok((await p.run('Dashboard')).includes('!'));
+  p.fail.add(p.requests.find(url => url.includes('yr.no')) || 'https://www.yr.no/en/forecast/daily-table/2-2964574/Ireland/Leinster/Dublin%20City/Dublin');
+  p.time = Date.parse('2026-10-05T23:30:00Z');
+  values = await p.run('Dashboard');
+  assert.ok(values.includes('B')); assert.ok(values.includes('?'));
+});
+
+test('Lock Screen trains keep today-only cutoffs, live delays and distinct empty or unknown results', async () => {
+  const p = phone(); p.parameter = 'trains'; p.family = 'accessoryCircular';
+  let values = await p.run('Dashboard');
+  for (const value of ['5 Oct', 'SH', 'CS', '~22:11', '~18:32']) assert.ok(values.includes(value));
+  p.time = Date.parse('2026-10-05T21:12:00Z');
+  p.live = { Traincode: 'P227', Traindate: '05 Oct 2026', Destination: 'Dublin Heuston',
+    Servertime: stamp(p.time), Status: 'Delayed', Expdepart: '22:18' };
+  values = await p.run('Dashboard');
+  assert.ok(values.includes('22:18')); assert.ok(values.includes('—'));
+  p.live.Status = 'Cancelled';
+  assert.equal((await p.run('Dashboard')).filter(value => value === '—').length, 2);
+  p.time = Date.parse('2026-12-13T12:00:00Z'); p.fail.add(github + 'rail.json');
+  assert.equal((await p.run('Dashboard')).filter(value => value === '?').length, 3);
+});
+
+test('Lock Screen Luas keeps the catchable connection, service alerts and elapsed timer', async () => {
+  const p = phone(); p.parameter = 'luas'; p.family = 'accessoryRectangular';
+  let values = await p.run('Dashboard');
+  for (const value of ['Parnell', 'Abbey → Point', '17:02', '~17:09']) assert.ok(values.includes(value));
+  assert.ok(!values.includes('17:08'));
+  assert.equal(p.rendered.filter(item => item.timer).length, 1);
+  const parnell = p.requests.find(url => url.includes('stop=PAR'));
+  p.bodies.set(parnell, '<stopInfo created="' + stamp(p.time) + '"><message>Green Line delays</message>' +
+    '<direction name="Outbound"><tram destination="Bride’s Glen" dueMins="2"/></direction></stopInfo>');
+  assert.ok((await p.run('Dashboard')).includes('TII/Luas !'));
+  p.feedAge = 4 * 60000; p.bodies.clear();
+  values = await p.run('Dashboard');
+  assert.equal(values.filter(value => value === '?').length, 3);
+  assert.ok(!values.includes('17:02') && !values.includes('~17:09'));
+});
 
 test('Home Screen content leaves room for native margins and taller text', async () => {
   // Stress assumptions, not measured iPhone dimensions: 12 pt margins and 1.35 font line height.

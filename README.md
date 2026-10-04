@@ -77,6 +77,31 @@ If they cannot get code from GitHub, they use the saved code.
 For the first run, you must use an internet connection.
 iOS sets the time for each widget refresh.
 
+## Lock Screen widgets
+
+The same loader and parameters also support the widgets below the Lock Screen clock.
+Use circular slots for `weather` and `trains`, and a rectangular slot for `luas`.
+These slots use separate layouts with less text.
+Your existing widgets get the layout update at their next run.
+
+Weather shows temperature, feels-like temperature (`F`), a short condition, and the daylight scale.
+The countdown uses `D` for dark and `B` for bright.
+Trains show today's date and both departures: `SH` means Sallins to Heuston, and `CS` means Connolly to Sallins.
+A train time with `~` comes from the timetable rather than a live prediction.
+The Luas rows show Parnell and the possible Abbey Street connection toward The Point.
+The Abbey time uses `~` because it is a prediction.
+
+`—` means no remaining qualifying service or connection. `?` means required data is missing or unverified.
+The freshness dot changes to `!` for old data. A `!` beside `TII/Luas` means a service alert.
+Lock Screen tint can hide the freshness colors, so these symbols also show the status.
+Full provider credits are in this README and [NOTICE.md](NOTICE.md).
+
+Layout tests use Apple's smallest listed slots: 68 pt circles and 153 × 68 pt rectangles.
+The circles keep text inside a safe square to avoid the curved edges.
+These are conservative test limits, not measured iPhone Air frames.
+[Apple's widget size table](https://developer.apple.com/design/human-interface-guidelines/widgets) does not list iPhone Air.
+Native appearance still needs a check on the phone.
+
 ## Licence and credits
 
 Original project code, documentation and banner are [MIT licensed](LICENSE).
