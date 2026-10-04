@@ -70,19 +70,37 @@ function parseYr(html) {
   if (!Number.isFinite(data?.temperature?.value) || !Number.isFinite(data?.temperature?.feelsLike)) throw new Error("Yr weather unavailable");
   const label = html.match(/<div class="now-hero__next-hour-symbol">\s*<div class="weather-symbol">\s*<img\b[^>]*\balt="([^"]+)"/)?.[1];
   const description = label ? label[0].toUpperCase() + label.slice(1) : null;
-  return { temperature: data.temperature.value, feelsLike: data.temperature.feelsLike, description };
+  // Yr's first day interval covers only the rest of today.
+  const today = state.queries.find(q => q.queryKey[0] === "forecast")?.state.data?.dayIntervals?.[0]?.temperature;
+  const range = [data.temperature.value, today?.min, today?.max].filter(Number.isFinite);
+  return { temperature: data.temperature.value, feelsLike: data.temperature.feelsLike, description, symbol: data.symbolCode?.next1Hour || null, low: Math.min(...range), high: Math.max(...range) };
 }
 async function weather(now) {
   const old = readCache("weather");
-  if (old && old.description !== undefined && now.getTime() - old.fetchedAt < 10 * 60000) return old;
+  if (old && old.low !== undefined && now.getTime() - old.fetchedAt < 10 * 60000) return old;
   try {
     const result = { ...parseYr(await request(YR).loadString()), fetchedAt: now.getTime() };
+    // Keep today's earlier values so the low and high cover the whole day.
+    const seen = readCache("temperature-range"), day = dateKey(now);
+    if (seen?.day === day) {
+      result.low = Math.min(result.low, seen.low);
+      result.high = Math.max(result.high, seen.high);
+    }
+    saveCache("temperature-range", { day, low: result.low, high: result.high });
     saveCache("weather", result);
     return result;
   } catch (e) {
     console.log(String(e));
-    return old && now.getTime() - old.fetchedAt < 60 * 60000 ? { ...old, stale: true } : null;
+    return old && old.low !== undefined && now.getTime() - old.fetchedAt < 60 * 60000 ? { ...old, stale: true } : null;
   }
+}
+function weatherSymbol(code) {
+  const night = /_night$/.test(code);
+  return /thunder/.test(code) ? "cloud.bolt.rain.fill" : /snow/.test(code) ? "cloud.snow.fill" : /sleet/.test(code) ? "cloud.sleet.fill" :
+    /^heavyrain/.test(code) ? "cloud.heavyrain.fill" : /rainshowers/.test(code) ? (night ? "cloud.moon.rain.fill" : "cloud.sun.rain.fill") :
+    /^lightrain/.test(code) ? "cloud.drizzle.fill" : /rain/.test(code) ? "cloud.rain.fill" : /fog/.test(code) ? "cloud.fog.fill" :
+    /^(fair|partlycloudy)/.test(code) ? (night ? "cloud.moon.fill" : "cloud.sun.fill") :
+    /^clearsky/.test(code) ? (night ? "moon.stars.fill" : "sun.max.fill") : "cloud.fill";
 }
 /*
  * Dublin solar calculations adapted from SunCalc by Volodymyr Agafonkin.
@@ -287,6 +305,35 @@ function scale(level) {
   dc.fillRect(new Rect(0, 0, Math.max(2, level * 170), 6));
   return dc.getImage();
 }
+// Temperature gauge in the style of Apple Weather: a 3/4 ring from today's low to high.
+function temperatureRing(yr) {
+  const size = 60, c = size / 2, r = 25, width = 5, start = 0.75 * Math.PI, sweep = 1.5 * Math.PI;
+  const point = f => new Point(c + r * Math.cos(start + f * sweep), c + r * Math.sin(start + f * sweep));
+  const mix = f => new Color([0, 2, 4].map(i => Math.round(parseInt("8eafcf".slice(i, i + 2), 16) * (1 - f) + parseInt("d9a066".slice(i, i + 2), 16) * f).toString(16).padStart(2, "0")).join(""));
+  const dc = new DrawContext();
+  dc.size = new Size(size, size);
+  dc.opaque = false;
+  dc.respectScreenScale = true;
+  for (let i = 0; i <= 120; i++) {
+    const p = point(i / 120);
+    dc.setFillColor(mix(i / 120));
+    dc.fillEllipse(new Rect(p.x - width / 2, p.y - width / 2, width, width));
+  }
+  const marker = point(yr.high > yr.low ? Math.min(1, Math.max(0, (yr.temperature - yr.low) / (yr.high - yr.low))) : 0.5);
+  dc.setFillColor(new Color("1c1c1e"));
+  dc.fillEllipse(new Rect(marker.x - 5, marker.y - 5, 10, 10));
+  dc.setFillColor(new Color("f2f2f7"));
+  dc.fillEllipse(new Rect(marker.x - 3, marker.y - 3, 6, 6));
+  dc.setTextAlignedCenter();
+  dc.setFont(Font.semiboldSystemFont(19));
+  dc.setTextColor(new Color("f2f2f7"));
+  dc.drawTextInRect(Math.round(yr.temperature) + "°", new Rect(0, c - 12, size, 24));
+  dc.setFont(Font.semiboldSystemFont(10));
+  dc.setTextColor(new Color("8e8e93"));
+  dc.drawTextInRect(String(Math.round(yr.low)), new Rect(c - 21, size - 13, 18, 13));
+  dc.drawTextInRect(String(Math.round(yr.high)), new Rect(c + 3, size - 13, 18, 13));
+  return dc.getImage();
+}
 function trainRow(w, label, result) {
   text(w, label, 11, "8eafcf");
   if (result.message) text(w, result.message, 17, "8eafcf", true);
@@ -308,7 +355,23 @@ async function dashboard() {
   w.setPadding(13, 15, 12, 15);
   const header = w.addStack();
   header.centerAlignContent();
-  text(header, yr ? Math.round(yr.temperature) + "°C  ·  feels " + Math.round(yr.feelsLike) + "°C" : "Yr weather unavailable", 23, "f2f2f7", true);
+  if (yr) {
+    header.addImage(temperatureRing(yr)).imageSize = new Size(60, 60);
+    header.addSpacer(10);
+    const info = header.addStack();
+    info.layoutVertically();
+    const condition = info.addStack();
+    condition.centerAlignContent();
+    if (yr.symbol) {
+      const icon = condition.addImage(SFSymbol.named(weatherSymbol(yr.symbol)).image);
+      icon.imageSize = new Size(20, 20);
+      icon.tintColor = new Color("f2f2f7");
+      condition.addSpacer(6);
+    }
+    text(condition, (yr.description || "Conditions unavailable") + (yr.stale ? " · cached" : ""), 15, "f2f2f7", true);
+    info.addSpacer(3);
+    text(info, "Feels " + Math.round(yr.feelsLike) + "°C", 13, "8e8e93");
+  } else text(header, "Yr weather unavailable", 23, "f2f2f7", true);
   header.addSpacer();
   const freshness = header.addStack();
   freshness.centerAlignContent();
@@ -324,9 +387,7 @@ async function dashboard() {
   elapsed.applyTimerStyle();
   elapsed.font = Font.semiboldMonospacedSystemFont(17);
   elapsed.textColor = new Color(statusColor);
-  w.addSpacer(6);
-  if (yr) text(w, (yr.description || "Conditions unavailable") + (yr.stale ? " · cached" : ""), 11, "8e8e93");
-  w.addSpacer(5);
+  w.addSpacer(8);
   let event;
   if (sun) {
     event = nextLight(sun, now);
