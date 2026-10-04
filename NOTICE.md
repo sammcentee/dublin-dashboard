@@ -3,7 +3,7 @@
 The project's original code, documentation and banner are covered by the
 [MIT licence](LICENSE). This does not relicense third-party code, data, service
 names or branding. Preserve the notices below when redistributing the relevant
-material. Provider credits appear in the widget without tap links.
+material. Provider credits appear in this file and the README, not in the widget.
 
 ## Weather: MET Norway, via Yr
 

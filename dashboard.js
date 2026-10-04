@@ -70,7 +70,7 @@ function parseYr(html) {
   if (!Number.isFinite(data?.temperature?.value) || !Number.isFinite(data?.temperature?.feelsLike)) throw new Error("Yr weather unavailable");
   const label = html.match(/<div class="now-hero__next-hour-symbol">\s*<div class="weather-symbol">\s*<img\b[^>]*\balt="([^"]+)"/)?.[1];
   const description = label ? label[0].toUpperCase() + label.slice(1) : null;
-  return { temperature: data.temperature.value, feelsLike: data.temperature.feelsLike, description, updatedAt: data.created };
+  return { temperature: data.temperature.value, feelsLike: data.temperature.feelsLike, description };
 }
 async function weather(now) {
   const old = readCache("weather");
@@ -325,8 +325,7 @@ async function dashboard() {
   elapsed.font = Font.semiboldMonospacedSystemFont(17);
   elapsed.textColor = new Color(statusColor);
   w.addSpacer(6);
-  const yrTime = yr?.updatedAt ? " · " + clock(new Date(yr.updatedAt)) : "";
-  text(w, (yr ? (yr.description || "Conditions unavailable") + " · " : "") + "Yr · MET Norway" + yrTime + (yr?.stale ? " · cached" : ""), 11, "8e8e93");
+  if (yr) text(w, (yr.description || "Conditions unavailable") + (yr.stale ? " · cached" : ""), 11, "8e8e93");
   w.addSpacer(5);
   let event;
   if (sun) {
@@ -367,12 +366,6 @@ async function dashboard() {
   const messages = [parnell?.message, abbey?.message].filter(m => m && !/operating normally/i.test(m));
   if (messages.length) text(w, [...new Set(messages)].join(" · "), 9, "ff9f0a");
   w.addSpacer();
-  const sources = w.addStack();
-  text(sources, "NTA/TFI " + (rail?.data.retrievedAt || "") + (rail?.unverified ? " · unchecked" : ""), 8, "8e8e93");
-  sources.addSpacer();
-  text(sources, "Irish Rail · TII/Luas" + (usableParnell ? " " + clock(usableParnell.created) : ""), 8, "8e8e93");
-  sources.addSpacer();
-  text(sources, "SunCalc", 8, "8e8e93");
   let refresh = now.getTime() + 2 * 60000;
   if (event) refresh = Math.min(refresh, event.date.getTime() + 1000);
   if (trips.length) refresh = Math.min(refresh, trips[0].green.arrival.getTime() + 15000);
