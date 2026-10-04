@@ -249,10 +249,16 @@ async function luas(stop, now) {
   const xml = await request("https://luasforecasts.rpa.ie/xml/get.ashx?action=forecast&stop=" + stop + "&encrypt=false").loadString();
   return parseLuas(xml, now);
 }
+// Minutes from Abbey Street to PartnerRe, The Exchange, George's Dock: scheduled TFI ride plus OpenStreetMap walk.
+// The Point trams: George's Dock stop, then 87 m. Connolly trams: Busáras stop, then 392 m.
+const WORK_MINUTES = { "The Point": 6, "Connolly": 9 };
 function connections(parnell, abbey, now) {
   const upcoming = (feed, match) => (feed?.trams || []).filter(match).map(t => t.dueNow && now - feed.created < 60000 ? { ...t, arrival: new Date(now) } : t).filter(t => t.arrival >= now);
-  const reds = upcoming(abbey, t => t.direction === "Inbound" && ["The Point", "Connolly"].includes(t.destination));
-  return upcoming(parnell, t => t.direction === "Outbound").slice(0, 5).map(green => ({ green, red: reds.find(t => t.arrival - green.arrival >= 5 * 60000) }));
+  const reds = upcoming(abbey, t => t.direction === "Inbound" && t.destination in WORK_MINUTES);
+  return upcoming(parnell, t => t.direction === "Outbound").slice(0, 5).map(green => {
+    const red = reds.find(t => t.arrival - green.arrival >= 5 * 60000);
+    return { green, red, work: red && new Date(red.arrival.getTime() + WORK_MINUTES[red.destination] * 60000) };
+  });
 }
 
 async function timetable(now) {
@@ -305,18 +311,26 @@ function scale(level) {
   dc.fillRect(new Rect(0, 0, Math.max(2, level * 170), 6));
   return dc.getImage();
 }
+// Muted colours for actual temperatures (°C), from cold to hot.
+const TEMPERATURE_COLORS = [[-5, "8e9be0"], [3, "7fb0dc"], [9, "7cc2b5"], [14, "a9c47c"], [19, "e0c063"], [24, "e39b5b"], [29, "d96c5b"]];
+function temperatureColor(t) {
+  const i = TEMPERATURE_COLORS.findIndex(([v]) => v >= t);
+  if (i === 0) return TEMPERATURE_COLORS[0][1];
+  if (i === -1) return TEMPERATURE_COLORS[TEMPERATURE_COLORS.length - 1][1];
+  const [[v0, c0], [v1, c1]] = [TEMPERATURE_COLORS[i - 1], TEMPERATURE_COLORS[i]], f = (t - v0) / (v1 - v0);
+  return [0, 2, 4].map(j => Math.round(parseInt(c0.slice(j, j + 2), 16) * (1 - f) + parseInt(c1.slice(j, j + 2), 16) * f).toString(16).padStart(2, "0")).join("");
+}
 // Temperature gauge in the style of Apple Weather: a 3/4 ring from today's low to high.
 function temperatureRing(yr) {
   const size = 60, c = size / 2, r = 25, width = 5, start = 0.75 * Math.PI, sweep = 1.5 * Math.PI;
   const point = f => new Point(c + r * Math.cos(start + f * sweep), c + r * Math.sin(start + f * sweep));
-  const mix = f => new Color([0, 2, 4].map(i => Math.round(parseInt("8eafcf".slice(i, i + 2), 16) * (1 - f) + parseInt("d9a066".slice(i, i + 2), 16) * f).toString(16).padStart(2, "0")).join(""));
   const dc = new DrawContext();
   dc.size = new Size(size, size);
   dc.opaque = false;
   dc.respectScreenScale = true;
   for (let i = 0; i <= 120; i++) {
     const p = point(i / 120);
-    dc.setFillColor(mix(i / 120));
+    dc.setFillColor(new Color(temperatureColor(yr.low + (yr.high - yr.low) * i / 120)));
     dc.fillEllipse(new Rect(p.x - width / 2, p.y - width / 2, width, width));
   }
   const marker = point(yr.high > yr.low ? Math.min(1, Math.max(0, (yr.temperature - yr.low) / (yr.high - yr.low))) : 0.5);
@@ -368,7 +382,7 @@ async function dashboard() {
       icon.tintColor = new Color("f2f2f7");
       condition.addSpacer(6);
     }
-    text(condition, (yr.description || "Conditions unavailable") + (yr.stale ? " · cached" : ""), 15, "f2f2f7", true);
+    text(condition, (yr.description || "Conditions unavailable") + (yr.stale ? " · cached" : ""), 14, "f2f2f7", true).lineLimit = 2;
     info.addSpacer(3);
     text(info, "Feels " + Math.round(yr.feelsLike) + "°C", 13, "8e8e93");
   } else text(header, "Yr weather unavailable", 23, "f2f2f7", true);
@@ -410,11 +424,12 @@ async function dashboard() {
   const trips = connections(usableParnell, usableAbbey, now);
   const head = w.addStack();
   text(head, "PARNELL", 11, "8cba9a");
-  text(head, "  →  ABBEY STREET", 11, "c99a9a");
+  text(head, "  →  ABBEY ST", 11, "c99a9a");
+  text(head, "  →  WORK", 11, "f2f2f7");
   head.addSpacer();
   text(head, "5 min transfer · estimated", 9, "8e8e93");
   if (!trips.length) text(w, usableParnell ? "No tram forecast" : "Luas feed unavailable", 15, "8cba9a", true);
-  for (const { green, red } of trips) {
+  for (const { green, red, work } of trips) {
     const row = w.addStack();
     row.centerAlignContent();
     text(row, green.dueNow ? "Due  " : clock(green.arrival), 15, "8cba9a").font = Font.semiboldMonospacedSystemFont(15);
@@ -422,6 +437,8 @@ async function dashboard() {
     if (red) {
       text(row, clock(red.arrival), 15, "c99a9a").font = Font.semiboldMonospacedSystemFont(15);
       text(row, "  " + red.destination, 11, "c99a9a");
+      text(row, "  →  ", 13, "8e8e93");
+      text(row, clock(work), 15, "f2f2f7").font = Font.semiboldMonospacedSystemFont(15);
     } else text(row, usableAbbey ? "No connection in forecast" : "Luas feed unavailable", 13, "c99a9a", true);
   }
   const messages = [parnell?.message, abbey?.message].filter(m => m && !/operating normally/i.test(m));
