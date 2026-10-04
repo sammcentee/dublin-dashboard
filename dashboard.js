@@ -374,4 +374,25 @@ async function dashboard() {
 }
 
 // Run the dashboard.
-await dashboard();
+const view = args.widgetParameter;
+if (["weather", "trains", "luas"].includes(view) && config.widgetFamily !== "large") {
+  const homeFolder = fm.joinPath(fm.documentsDirectory(), "DublinDashboardHome");
+  if (!fm.fileExists(homeFolder)) fm.createDirectory(homeFolder, true);
+  const savedHome = fm.joinPath(homeFolder, "home-source.js");
+  const AsyncFunction = (async function () {}).constructor;
+  let run;
+  try {
+    const r = new Request("https://raw.githubusercontent.com/sammcentee/dublin-dashboard/main/home-widgets.js");
+    r.timeoutInterval = 5;
+    r.headers = { "Cache-Control": "no-cache" };
+    const source = await r.loadString();
+    if (r.response.statusCode !== 200) throw new Error("GitHub returned HTTP " + r.response.statusCode);
+    run = new AsyncFunction("view", source);
+    fm.writeString(savedHome, source);
+  } catch (error) {
+    console.log("Home Screen update unavailable: " + String(error));
+    if (!fm.fileExists(savedHome)) throw new Error("Use the internet for the first run of this widget.");
+    run = new AsyncFunction("view", fm.readString(savedHome));
+  }
+  await run(view);
+} else await dashboard();

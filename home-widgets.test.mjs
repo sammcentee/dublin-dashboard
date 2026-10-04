@@ -34,7 +34,7 @@ function phone() {
     time: Date.parse('2026-10-05T16:00:00Z'), files: new Map([[originalCache, 'large widget data']]),
     requests: [], writes: [], fail: new Set(), bodies: new Map(), status: new Map(),
     rendered: [], previews: [], widget: null, complete: false, app: false,
-    live: null, feedAge: 0
+    live: null, feedAge: 0, parameter: null, family: null
   };
   class PhoneDate extends Date {
     constructor(...args) { super(...(args.length ? args : [state.time])); }
@@ -109,10 +109,13 @@ function phone() {
     setPadding(...values) { this.padding = values; }
     async presentSmall() { state.previews.push('small'); }
     async presentMedium() { state.previews.push('medium'); }
+    async presentLarge() { state.previews.push('large'); }
+    layoutVertically() {}
   }
   const context = vm.createContext({
     Date: PhoneDate, Intl, Request, XMLParser, console: { log() {} },
-    config: { get runsInApp() { return state.app; } }, ListWidget: Widget,
+    args: { get widgetParameter() { return state.parameter; } },
+    config: { get runsInApp() { return state.app; }, get widgetFamily() { return state.family; } }, ListWidget: Widget,
     FileManager: { local: () => ({
       documentsDirectory: () => '/phone', joinPath: (a, b) => a + '/' + b,
       fileExists: path => state.files.has(path), createDirectory: path => state.files.set(path, ''),
@@ -134,14 +137,17 @@ function phone() {
       complete: () => { state.complete = true; state.writes.push('complete'); }
     }
   });
-  state.run = async name => {
+  state.run = async (name, preserveLargeCache = true) => {
     state.rendered.length = 0; state.requests.length = 0; state.writes.length = 0; state.complete = false;
     await vm.runInContext('(async () => {\n' + source('./Dublin ' + name + '.js') + '\n})()', context);
     assert.equal(state.complete, true);
     assert.equal(state.widget.backgroundColor.hex, '1c1c1e');
     assert.equal(state.widget.url, undefined);
-    assert.equal(state.files.get(originalCache), 'large widget data');
-    assert.ok(state.writes.every(path => path === 'complete' || path.startsWith(homeCache)));
+    if (preserveLargeCache) {
+      assert.equal(state.files.get(originalCache), 'large widget data');
+      assert.ok(state.writes.every(path => path === 'complete' || path.startsWith(homeCache) ||
+        path === '/phone/DublinDashboard/github-source.js'));
+    }
     assert.equal(state.writes.at(-1), 'complete');
     assert.ok(state.widget.refreshAfterDate.getTime() > state.time);
     return state.rendered.filter(item => item.value).map(item => item.value);
@@ -165,6 +171,46 @@ for (const [name, size, heading, credit, provider] of [
   assert.equal(p.files.get(homeCache + 'data-source.js'), dashboardCode);
   assert.ok(p.files.get(homeCache + 'data-source.js').includes('Copyright (c) 2026, Volodymyr Agafonkin'));
   assert.equal(p.rendered.find(item => item.value === '● ').textColor.hex, '30d158');
+});
+
+for (const [parameter, family, heading, credit] of [
+  ['weather', 'small', 'WEATHER', 'Yr · MET Norway · SunCalc'],
+  ['trains', 'medium', 'TRAINS', 'NTA/TFI · Irish Rail'],
+  ['luas', 'medium', 'LUAS CONNECTION', 'TII/Luas']
+]) test('existing Dashboard loader selects ' + parameter + ' without new phone code', async () => {
+  const p = phone(); p.parameter = parameter; p.family = family; p.app = true;
+  const text = await p.run('Dashboard');
+  assert.ok(text.includes(heading)); assert.ok(text.includes(credit));
+  assert.deepEqual(p.previews, [family]);
+  assert.equal(p.files.get(homeCache + 'home-source.js'), homeCode);
+  assert.equal(p.files.get('/phone/DublinDashboard/github-source.js'), dashboardCode);
+});
+
+test('blank and unknown parameters preserve the large view; large widgets always keep the large view', async () => {
+  for (const [parameter, family] of [[null, 'large'], ['', 'large'], ['unknown', 'medium'], ['weather', 'large']]) {
+    const p = phone(); p.parameter = parameter; p.family = family; p.app = true;
+    await p.run('Dashboard', false);
+    assert.deepEqual(p.previews, ['large']);
+    assert.ok(!p.requests.includes(github + 'home-widgets.js'));
+  }
+});
+
+test('the existing Dashboard loader keeps compact views on download failures', async () => {
+  const p = phone(); p.parameter = 'weather'; p.family = 'small';
+  await p.run('Dashboard');
+  const url = github + 'home-widgets.js';
+  for (const failure of ['offline', 'http', 'syntax']) {
+    p.fail.clear(); p.status.clear(); p.bodies.clear();
+    if (failure === 'offline') p.fail.add(url);
+    if (failure === 'http') p.status.set(url, 404);
+    if (failure === 'syntax') p.bodies.set(url, '<html>invalid JavaScript</html>');
+    assert.ok((await p.run('Dashboard')).includes('12°C'));
+    assert.equal(p.files.get(homeCache + 'home-source.js'), homeCode);
+  }
+  p.fail.add(github + 'dashboard.js');
+  assert.ok((await p.run('Dashboard')).includes('12°C'));
+  const first = phone(); first.parameter = 'weather'; first.family = 'small'; first.fail.add(url);
+  await assert.rejects(first.run('Dashboard'), /Use the internet for the first run/);
 });
 
 test('weather keeps Yr values, daylight scale, next event, and data age colors', async () => {

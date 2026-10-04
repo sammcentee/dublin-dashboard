@@ -41,13 +41,15 @@ The large dashboard keeps its script and saved data.
 | [Dublin Trains](Dublin%20Trains.js) | Medium | Both direct train routes, with the same cutoffs and dates for today only |
 | [Dublin Luas](Dublin%20Luas.js) | Medium | Parnell Green Line tram and a possible Abbey Street connection toward The Point |
 
-1. Open a script from the table.
-2. Select `Raw`.
-3. Copy all the code.
-4. In Scriptable, make a new script with the name from the table.
-5. Paste the code into the new script.
-6. With an internet connection, select the run button.
-7. Do these steps again for the other 2 scripts.
+If your phone already uses the GitHub loader for `Dublin Dashboard`, no new code copy is necessary.
+That script can show all 3 views through the `Parameter` field in each widget.
+[Scriptable supports different views of one script through widget parameters](https://docs.scriptable.app/args/#widgetparameter).
+
+| Widget | Size | Script | Parameter |
+| --- | --- | --- | --- |
+| Weather and daylight | Small | Dublin Dashboard | `weather` |
+| Both train routes | Medium | Dublin Dashboard | `trains` |
+| Luas connection | Medium | Dublin Dashboard | `luas` |
 
 To [add each widget to the Home Screen](https://support.apple.com/en-ie/118610):
 
@@ -59,10 +61,15 @@ To [add each widget to the Home Screen](https://support.apple.com/en-ie/118610):
 6. Select `Add Widget`.
 7. Touch and hold the new widget.
 8. Select `Edit Widget`.
-9. Select the script with the correct name.
-10. Set `When Interacting` to `Run Script`.
+9. Set `Script` to `Dublin Dashboard`.
+10. Set `Parameter` to the value from the table.
+11. Set `When Interacting` to `Run Script`.
 
-The new scripts download updates from this repository at each run.
+Keep the large widget on `Dublin Dashboard`.
+Large widgets always show the large dashboard.
+The 3 scripts in the first table also remain available for a new phone setup.
+
+The widgets download updates from this repository at each run.
 If they cannot get code from GitHub, they use the saved code.
 For the first run, you must use an internet connection.
 iOS sets the time for each widget refresh.
