@@ -38,7 +38,7 @@ The large dashboard keeps its script and saved data.
 | Script | Widget size | Information |
 | --- | --- | --- |
 | [Dublin Weather](Dublin%20Weather.js) | Small | Temperature, feels-like temperature, weather description, daylight countdown and scale |
-| [Dublin Trains](Dublin%20Trains.js) | Medium | Both direct train routes, with the same cutoffs and dates for today only |
+| [Dublin Trains](Dublin%20Trains.js) | Small | Both direct train routes, with the same cutoffs and dates for today only |
 | [Dublin Luas](Dublin%20Luas.js) | Medium | Parnell Green Line tram and a possible Abbey Street connection toward The Point |
 
 If your phone already uses the GitHub loader for `Dublin Dashboard`, no new code copy is necessary.
@@ -48,7 +48,7 @@ That script can show all 3 views through the `Parameter` field in each widget.
 | Widget | Size | Script | Parameter |
 | --- | --- | --- | --- |
 | Weather and daylight | Small | Dublin Dashboard | `weather` |
-| Both train routes | Medium | Dublin Dashboard | `trains` |
+| Both train routes | Small | Dublin Dashboard | `trains` |
 | Luas connection | Medium | Dublin Dashboard | `luas` |
 
 To [add each widget to the Home Screen](https://support.apple.com/en-ie/118610):

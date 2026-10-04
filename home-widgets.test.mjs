@@ -91,6 +91,7 @@ function phone() {
     async loadJSON() {
       state.requests.push(this.url);
       assert.equal(this.url, github + 'rail.json');
+      if (state.fail.has(this.url)) throw new Error('offline');
       this.response = { statusCode: 200 };
       return rail();
     }
@@ -105,12 +106,12 @@ function phone() {
     addStack() { const item = new Widget(); this.children.push(item); return item; }
     addSpacer(spacer) { this.children.push({ spacer }); }
     addImage(image) { const item = { image }; this.children.push(item); state.rendered.push(item); return item; }
-    centerAlignContent() {}
+    centerAlignContent() { this.alignment = 'center'; }
     setPadding(...values) { this.padding = values; }
     async presentSmall() { state.previews.push('small'); }
     async presentMedium() { state.previews.push('medium'); }
     async presentLarge() { state.previews.push('large'); }
-    layoutVertically() {}
+    layoutVertically() { this.vertical = true; }
   }
   const context = vm.createContext({
     Date: PhoneDate, Intl, Request, XMLParser, console: { log() {} },
@@ -157,7 +158,7 @@ function phone() {
 
 for (const [name, size, heading, credit, provider] of [
   ['Weather', 'small', 'WEATHER', 'Yr · MET Norway · SunCalc', 'yr.no'],
-  ['Trains', 'medium', 'TRAINS', 'NTA/TFI · Irish Rail', 'api.irishrail.ie'],
+  ['Trains', 'small', 'TRAINS', 'NTA/TFI · Irish Rail', 'api.irishrail.ie'],
   ['Luas', 'medium', 'LUAS CONNECTION', 'TII/Luas', 'luasforecasts']
 ]) test(name + ' uses its own feeds, size, and cache', async () => {
   const p = phone(); p.app = true;
@@ -175,7 +176,7 @@ for (const [name, size, heading, credit, provider] of [
 
 for (const [parameter, family, heading, credit] of [
   ['weather', 'small', 'WEATHER', 'Yr · MET Norway · SunCalc'],
-  ['trains', 'medium', 'TRAINS', 'NTA/TFI · Irish Rail'],
+  ['trains', 'small', 'TRAINS', 'NTA/TFI · Irish Rail'],
   ['luas', 'medium', 'LUAS CONNECTION', 'TII/Luas']
 ]) test('existing Dashboard loader selects ' + parameter + ' without new phone code', async () => {
   const p = phone(); p.parameter = parameter; p.family = family; p.app = true;
@@ -216,7 +217,7 @@ test('the existing Dashboard loader keeps compact views on download failures', a
 test('weather keeps Yr values, daylight scale, next event, and data age colors', async () => {
   const p = phone();
   let text = await p.run('Weather');
-  for (const value of ['12°C', 'Feels like 10°C', 'Light rain', 'Dark in ']) assert.ok(text.includes(value));
+  for (const value of ['12°C', 'Feels like', '10°C', 'Light rain', 'Dark in ']) assert.ok(text.includes(value));
   const image = p.rendered.find(item => item.image);
   assert.equal(image.imageSize.width, 78);
   assert.ok(image.image.fills[1].width > 2 && image.image.fills[1].width < 170);
@@ -232,7 +233,7 @@ test('weather keeps Yr values, daylight scale, next event, and data age colors',
   assert.equal(p.rendered.find(item => item.value === '● ').textColor.hex, 'ff453a');
   p.time = Date.parse('2026-10-05T23:30:00Z');
   text = await p.run('Weather');
-  assert.ok(text.includes('Bright again in ')); assert.ok(text.includes('Unavailable'));
+  assert.ok(text.includes('Bright in ')); assert.ok(text.includes('Unavailable'));
   assert.equal(p.rendered.find(item => item.image).image.fills[1].width, 2);
 });
 
@@ -241,14 +242,14 @@ test('trains keep cutoffs, dates, live delays, cancellations, and today only', a
   let text = await p.run('Trains');
   assert.ok(text.includes('22:11')); assert.ok(text.includes('18:32'));
   assert.ok(!text.includes('22:00') && !text.includes('18:00'));
-  assert.ok(text.some(value => value.includes('Mon 5 Oct') && value.includes('scheduled')));
+  assert.ok(text.includes('Mon 5 Oct · direct')); assert.equal(text.filter(value => value === 'scheduled').length, 2);
   assert.equal(p.rendered.find(item => item.value === '22:11').textColor.hex, '8eafcf');
   p.app = true;
   p.time = Date.parse('2026-10-05T21:12:00Z');
   p.live = { Traincode: 'P227', Traindate: '05 Oct 2026', Destination: 'Dublin Heuston',
     Servertime: stamp(p.time), Status: 'Delayed', Expdepart: '22:18' };
   text = await p.run('Trains');
-  assert.ok(text.includes('22:18')); assert.ok(text.some(value => value.includes(' · live')));
+  assert.ok(text.includes('22:18')); assert.ok(text.includes('live'));
   p.live.Status = 'Cancelled';
   text = await p.run('Trains');
   assert.equal(text.filter(value => value === 'No more today').length, 2);
@@ -261,7 +262,7 @@ test('Luas selects the catchable tram and rejects stale or absent forecasts', as
   const p = phone();
   let text = await p.run('Luas');
   assert.ok(text.includes('17:02')); assert.ok(text.includes('17:09')); assert.ok(!text.includes('17:08'));
-  assert.ok(text.includes('Estimated · 7 min from Parnell · via Marlborough'));
+  assert.ok(text.includes('Estimated · 7 min from Parnell via Marlborough'));
   assert.equal(p.rendered.find(item => item.value === '17:02').textColor.hex, '8cba9a');
   assert.equal(p.rendered.find(item => item.value === '17:09').textColor.hex, 'c99a9a');
   const abbey = p.requests.find(url => url.includes('stop=ABB'));
@@ -273,6 +274,19 @@ test('Luas selects the catchable tram and rejects stale or absent forecasts', as
   text = await p.run('Luas');
   assert.ok(!text.includes('17:02') && !text.includes('17:09'));
   assert.ok(text.includes('No Green Line tram'));
+});
+
+test('small trains preserve expired fallback warnings without competing with route labels', async () => {
+  const p = phone();
+  p.time = Date.parse('2026-12-13T12:00:00Z');
+  p.fail.add(github + 'rail.json');
+  const text = await p.run('Trains');
+  assert.equal(text.filter(value => value === 'Refresh timetable').length, 2);
+  assert.ok(text.includes('Timetable unchecked'));
+  assert.ok(text.includes('Sun 13 Dec · direct'));
+  assert.ok(text.includes('After 22:00') && text.includes('After 18:00'));
+  assert.equal(p.widget.children.filter(item => item.value === 'Refresh timetable').length, 2);
+  assert.equal(p.rendered.find(item => item.value === '● ').textColor.hex, 'ff453a');
 });
 
 test('both code downloads keep saved code on offline, HTTP, syntax, and format failures', async () => {
