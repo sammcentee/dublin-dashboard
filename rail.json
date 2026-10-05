@@ -1,12 +1,12 @@
 {
   "source": "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip",
   "sourceInfoUrl": "https://www.transportforireland.ie/transitData/PT_Data.html",
-  "retrievedAt": "2026-10-04",
+  "retrievedAt": "2026-10-05",
   "feedVersion": "892A3408-F422-4978-8896-7420CF625122",
   "feedStart": "20261003",
   "feedEnd": "20271003",
-  "sourceLastModified": "Sat, 03 Oct 2026 22:15:56 GMT",
-  "sourceETag": "\"75b285-65cf6fe27df00\"",
+  "sourceLastModified": "Sun, 04 Oct 2026 22:15:28 GMT",
+  "sourceETag": "\"762478-65d0b1a540000\"",
   "timezone": "Europe/Dublin",
   "routes": {
     "sallinsHeuston": [
@@ -95,5 +95,5 @@
   },
   "validThrough": "20261212",
   "attribution": "Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.",
-  "checkedAt": 1791149219567
+  "checkedAt": 1791178942171
 }
