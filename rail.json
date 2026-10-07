@@ -1,36 +1,60 @@
 {
   "source": "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip",
   "sourceInfoUrl": "https://www.transportforireland.ie/transitData/PT_Data.html",
-  "retrievedAt": "2026-10-06",
-  "feedVersion": "5FB26276-8139-4E9D-A09E-2916C50A7718",
-  "feedStart": "20261005",
-  "feedEnd": "20271005",
-  "sourceLastModified": "Mon, 05 Oct 2026 22:36:40 GMT",
-  "sourceETag": "\"682c18-65d1f83fc8e00\"",
+  "retrievedAt": "2026-10-07",
+  "feedVersion": "F9BD085A-AF74-419A-AF99-9BBA76EF431F",
+  "feedStart": "20261006",
+  "feedEnd": "20271006",
+  "sourceLastModified": "Tue, 06 Oct 2026 22:17:04 GMT",
+  "sourceETag": "\"ba92bb-65d335bbb9800\"",
   "timezone": "Europe/Dublin",
   "routes": {
     "sallinsHeuston": [
       {
         "departure": "22:11:00",
         "arrival": "22:46:00",
-        "serviceId": "191",
+        "serviceId": "170",
         "tripId": "5936_11751",
+        "destination": "Dublin Heuston",
+        "trainCode": "P227"
+      },
+      {
+        "departure": "22:11:00",
+        "arrival": "22:46:00",
+        "serviceId": "316",
+        "tripId": "5963_11885",
         "destination": "Dublin Heuston",
         "trainCode": "P227"
       },
       {
         "departure": "22:29:00",
         "arrival": "22:52:00",
-        "serviceId": "188",
+        "serviceId": "170",
         "tripId": "5936_13185",
+        "destination": "Dublin Heuston",
+        "trainCode": "A531"
+      },
+      {
+        "departure": "22:29:00",
+        "arrival": "22:52:00",
+        "serviceId": "311",
+        "tripId": "5963_13325",
         "destination": "Dublin Heuston",
         "trainCode": "A531"
       },
       {
         "departure": "23:09:00",
         "arrival": "23:42:00",
-        "serviceId": "188",
+        "serviceId": "170",
         "tripId": "5936_11770",
+        "destination": "Dublin Heuston",
+        "trainCode": "P229"
+      },
+      {
+        "departure": "23:09:00",
+        "arrival": "23:42:00",
+        "serviceId": "311",
+        "tripId": "5963_11904",
         "destination": "Dublin Heuston",
         "trainCode": "P229"
       }
@@ -39,32 +63,46 @@
       {
         "departure": "18:32:00",
         "arrival": "19:23:00",
-        "serviceId": "174",
+        "serviceId": "170",
         "tripId": "5936_11923",
+        "destination": "Newbridge",
+        "trainCode": "D419"
+      },
+      {
+        "departure": "18:32:00",
+        "arrival": "19:23:00",
+        "serviceId": "293",
+        "tripId": "5963_12057",
         "destination": "Newbridge",
         "trainCode": "D419"
       }
     ]
   },
   "services": {
-    "174": {
+    "170": {
       "start": "20261005",
+      "end": "20261006",
+      "weekdays": "1100000",
+      "exceptions": {}
+    },
+    "293": {
+      "start": "20261007",
       "end": "20261211",
       "weekdays": "1111100",
       "exceptions": {
         "20261026": 2
       }
     },
-    "188": {
-      "start": "20261005",
+    "311": {
+      "start": "20261007",
       "end": "20261212",
       "weekdays": "1111110",
       "exceptions": {
         "20261026": 2
       }
     },
-    "191": {
-      "start": "20261005",
+    "316": {
+      "start": "20261007",
       "end": "20261212",
       "weekdays": "1111110",
       "exceptions": {}
@@ -72,5 +110,5 @@
   },
   "validThrough": "20261212",
   "attribution": "Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.",
-  "checkedAt": 1791310993230
+  "checkedAt": 1791352927407
 }
