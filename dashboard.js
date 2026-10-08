@@ -201,15 +201,6 @@ function nextLight(data, now) {
     { name: "Dark", date: new Date(d.civil_twilight_end) }
   ]).filter(e => e.date > now).sort((a, b) => a.date - b.date)[0];
 }
-function lightLevel(day, now) {
-  const anchors = [[day.civil_twilight_begin, 0], [day.sunrise, 0.6], [day.solar_noon, 1], [day.sunset, 0.6], [day.civil_twilight_end, 0]].map(([time, level]) => [new Date(time).getTime(), level]);
-  const t = now.getTime();
-  if (t <= anchors[0][0] || t >= anchors[4][0]) return 0;
-  for (let i = 1; i < anchors.length; i++) {
-    if (t <= anchors[i][0]) return anchors[i - 1][1] + (anchors[i][1] - anchors[i - 1][1]) * (t - anchors[i - 1][0]) / (anchors[i][0] - anchors[i - 1][0]);
-  }
-  return 0;
-}
 
 function parseRail(xml) {
   const records = [];
@@ -326,17 +317,6 @@ function timer(parent, date) {
 }
 function freshnessColor(age) {
   return age < 5 * 60000 ? "30d158" : "ff453a";
-}
-function scale(level) {
-  const dc = new DrawContext();
-  dc.size = new Size(170, 6);
-  dc.opaque = false;
-  dc.respectScreenScale = true;
-  dc.setFillColor(new Color("3a3a3c"));
-  dc.fillRect(new Rect(0, 0, 170, 6));
-  dc.setFillColor(new Color("9f8d6c"));
-  dc.fillRect(new Rect(0, 0, Math.max(2, level * 170), 6));
-  return dc.getImage();
 }
 // Muted colours for actual temperatures (°C), from cold to hot.
 const TEMPERATURE_COLORS = [[-5, "8e9be0"], [3, "7fb0dc"], [9, "7cc2b5"], [14, "a9c47c"], [19, "e0c063"], [24, "e39b5b"], [29, "d96c5b"]];
@@ -458,15 +438,6 @@ async function dashboard() {
     const row = w.addStack();
     text(row, event ? event.name + " in  " : "Daylight unavailable", 13, "b7a17a");
     if (event) timer(row, event.date);
-    const today = sun.days.find(d => d.date === isoDay(dateKey(now)));
-    if (today) {
-      const bar = w.addStack();
-      bar.centerAlignContent();
-      text(bar, "Dark  ", 9, "8e8e93");
-      const image = bar.addImage(scale(lightLevel(today, now)));
-      image.imageSize = new Size(170, 6);
-      text(bar, "  Bright", 9, "b7a17a");
-    }
   } else text(w, "Daylight unavailable", 13);
   w.addSpacer(8);
   trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || []) : { message: "TFI timetable unavailable" });
