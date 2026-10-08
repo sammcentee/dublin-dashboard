@@ -374,13 +374,13 @@ function temperatureRing(yr) {
   dc.drawTextInRect(String(Math.round(yr.high)), new Rect(right.x - 10, size - 11, 20, 11));
   return dc.getImage();
 }
-function trainRow(w, label, result, showTrain = false) {
+function trainRow(w, label, result, showTrain = false, timeOnly = false) {
   text(w, label, 11, "8eafcf");
   if (result.message) text(w, result.message, 17, "8eafcf", true);
   else {
     const line = showTrain ? w.addStack() : w;
     if (showTrain) line.centerAlignContent();
-    text(line, clock(result.departure) + " · " + dayLabel(result.departure) + " · " + (result.live ? "live" : "scheduled"), 17, "8eafcf", true);
+    text(line, timeOnly ? clock(result.departure) : clock(result.departure) + " · " + dayLabel(result.departure) + " · " + (result.live ? "live" : "scheduled"), 17, "8eafcf", true);
     if (showTrain) text(line, "  " + result.destination + " train · " + result.trainCode, 11, "8eafcf");
   }
   w.addSpacer(5);
@@ -465,7 +465,7 @@ async function dashboard() {
     }
   } else text(w, "Daylight unavailable", 13);
   w.addSpacer(8);
-  trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || []) : { message: "TFI timetable unavailable" });
+  trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || []) : { message: "TFI timetable unavailable" }, false, true);
   trainRow(w, "CONNOLLY → SALLINS · after 18:00 · direct", rail ? nextTrain(rail.data, "connollySallins", now, connolly || []) : { message: "TFI timetable unavailable" }, true);
   const trips = connections(usableParnell, usableAbbey, now);
   const head = w.addStack();
