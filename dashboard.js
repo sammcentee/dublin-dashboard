@@ -244,7 +244,10 @@ function nextTrain(data, route, now, board = []) {
     const isLive = live && live.Status !== "No Information" && /^\d{2}:\d{2}$/.test(live.Expdepart) && live.Expdepart !== "00:00";
     if (isLive) departure = localDate(key, live.Expdepart);
     const cutoff = localDate(key, route === "sallinsHeuston" ? "22:00:00" : "18:00:00");
-    if (departure >= now && departure > cutoff && dateKey(departure) === key) candidates.push({ ...trip, departure, scheduled, live: Boolean(isLive) });
+    // Expected arrival assumes the train keeps its current delay.
+    const delay = Math.max(0, Math.round((departure - scheduled) / 60000));
+    const arrival = new Date(localDate(key, trip.arrival).getTime() + delay * 60000);
+    if (departure >= now && departure > cutoff && dateKey(departure) === key) candidates.push({ ...trip, departure, scheduled, arrival, delay, live: Boolean(isLive) });
   }
   candidates.sort((a, b) => a.departure - b.departure);
   return candidates[0] || { message: today.length ? "No more today" : "No direct service today" };
@@ -374,14 +377,15 @@ function temperatureRing(yr) {
   dc.drawTextInRect(String(Math.round(yr.high)), new Rect(right.x - 10, size - 11, 20, 11));
   return dc.getImage();
 }
-function trainRow(w, label, result, showTrain = false, timeOnly = false) {
+function trainRow(w, label, result, showTrain = false) {
   text(w, label, 11, "8eafcf");
   if (result.message) text(w, result.message, 17, "8eafcf", true);
   else {
-    const line = showTrain ? w.addStack() : w;
-    if (showTrain) line.centerAlignContent();
-    text(line, timeOnly ? clock(result.departure) : clock(result.departure) + " · " + dayLabel(result.departure) + " · " + (result.live ? "live" : "scheduled"), 17, "8eafcf", true);
-    if (showTrain) text(line, "  " + result.destination + " train · " + result.trainCode, 11, "8eafcf");
+    const line = w.addStack();
+    line.centerAlignContent();
+    text(line, clock(result.departure) + " → " + clock(result.arrival), 17, "8eafcf", true);
+    if (result.delay) text(line, "  " + result.delay + " min late", 11, "ff9f0a", true);
+    if (showTrain) text(w, dayLabel(result.departure) + " · " + (result.live ? "live" : "scheduled") + " · " + result.destination + " train · " + result.trainCode, 11, "8eafcf");
   }
   w.addSpacer(5);
 }
@@ -465,7 +469,7 @@ async function dashboard() {
     }
   } else text(w, "Daylight unavailable", 13);
   w.addSpacer(8);
-  trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || []) : { message: "TFI timetable unavailable" }, false, true);
+  trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || []) : { message: "TFI timetable unavailable" });
   trainRow(w, "CONNOLLY → SALLINS · after 18:00 · direct", rail ? nextTrain(rail.data, "connollySallins", now, connolly || []) : { message: "TFI timetable unavailable" }, true);
   const trips = connections(usableParnell, usableAbbey, now);
   const head = w.addStack();

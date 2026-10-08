@@ -193,6 +193,24 @@ test('strict cutoffs also apply when live estimates replace scheduled departure'
   assert.equal(p.api.nextTrain(data, 'connollySallins', monday, [record(inbound, '18:01')]).live, true);
 });
 
+test('live delays move the expected arrival by the same number of minutes', () => {
+  const p = phone();
+  const data = fixture();
+  const monday = new Date('2026-10-05T16:00:00Z');
+  const inbound = data.routes.connollySallins[0];
+  const record = time => ({
+    Traincode: inbound.trainCode, Traindate: '05 Oct 2026', Destination: inbound.destination,
+    Servertime: '2026-10-05T17:00:00', Expdepart: time, Status: 'En Route'
+  });
+  const onTime = p.api.nextTrain(data, 'connollySallins', monday);
+  assert.equal(onTime.delay, 0);
+  assert.equal(onTime.arrival.toISOString(), '2026-10-05T23:17:00.000Z', '24:17 arrival is 00:17 next day');
+  const late = p.api.nextTrain(data, 'connollySallins', monday, [record('18:19')]);
+  assert.equal(late.delay, 4);
+  assert.equal(late.arrival.toISOString(), '2026-10-05T23:21:00.000Z');
+  assert.equal(p.api.nextTrain(data, 'connollySallins', monday, [record('18:13')]).delay, 0, 'early is not late');
+});
+
 function zip(contents, method) {
   const chunks = [], entries = [];
   let offset = 0;
