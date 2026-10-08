@@ -312,6 +312,8 @@ function text(parent, value, size, color = "f2f2f7", bold = false) {
 function timer(parent, date) {
   const item = parent.addDate(date);
   item.applyTimerStyle();
+  // Timer text fills the free width, so keep it next to its label.
+  item.leftAlignText();
   item.font = Font.semiboldMonospacedSystemFont(17);
   item.textColor = new Color("b7a17a");
 }
@@ -436,6 +438,7 @@ async function dashboard() {
   if (sun) {
     event = nextLight(sun, now);
     const row = w.addStack();
+    row.centerAlignContent();
     text(row, event ? event.name + " in  " : "Daylight unavailable", 13, "b7a17a");
     if (event) timer(row, event.date);
   } else text(w, "Daylight unavailable", 13);
@@ -448,7 +451,6 @@ async function dashboard() {
   text(head, "  →  ABBEY ST", 11, "c99a9a");
   text(head, "  →  WORK", 11, "d8b597");
   head.addSpacer();
-  text(head, "5 min transfer · estimated", 9, "8e8e93");
   if (!trips.length) text(w, usableParnell ? "No tram forecast" : "Luas feed unavailable", 15, "8cba9a", true);
   for (const { green, red, work } of trips) {
     const row = w.addStack();
