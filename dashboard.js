@@ -439,7 +439,7 @@ async function dashboard() {
     event = nextLight(sun, now);
     const row = w.addStack();
     row.centerAlignContent();
-    text(row, event ? event.name + " in  " : "Daylight unavailable", 13, "b7a17a");
+    text(row, event ? event.name + " at " + clock(event.date) + " · in  " : "Daylight unavailable", 13, "b7a17a");
     if (event) timer(row, event.date);
   } else text(w, "Daylight unavailable", 13);
   w.addSpacer(8);
