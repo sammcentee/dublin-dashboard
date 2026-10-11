@@ -281,7 +281,7 @@ const WORK_MINUTES = { "The Point": 6, "Connolly": 9 };
 function connections(parnell, abbey, now) {
   const upcoming = (feed, match) => (feed?.trams || []).filter(match).map(t => t.dueNow && now - feed.created < 60000 ? { ...t, arrival: new Date(now) } : t).filter(t => t.arrival >= now);
   const reds = upcoming(abbey, t => t.direction === "Inbound" && t.destination in WORK_MINUTES);
-  return upcoming(parnell, t => t.direction === "Outbound").slice(0, 5).map(green => {
+  return upcoming(parnell, t => t.direction === "Outbound").slice(0, 4).map(green => {
     const red = reds.find(t => t.arrival - green.arrival >= 5 * 60000);
     return { green, red, work: red && new Date(red.arrival.getTime() + WORK_MINUTES[red.destination] * 60000) };
   });
@@ -394,10 +394,11 @@ async function dashboard() {
   w.setPadding(13, 15, 12, 15);
   const header = w.addStack();
   header.centerAlignContent();
+  let info;
   if (yr) {
     header.addImage(temperatureRing(yr)).imageSize = new Size(60, 60);
     header.addSpacer(10);
-    const info = header.addStack();
+    info = header.addStack();
     info.layoutVertically();
     const condition = info.addStack();
     condition.centerAlignContent();
@@ -410,7 +411,22 @@ async function dashboard() {
     text(condition, (yr.description || "Conditions unavailable") + (yr.stale ? " · cached" : ""), 14, "f2f2f7", true).lineLimit = 2;
     info.addSpacer(3);
     text(info, "Feels " + Math.round(yr.feelsLike) + "°C", 13, "8e8e93");
-  } else text(header, "Yr weather unavailable", 23, "f2f2f7", true);
+  } else {
+    info = header.addStack();
+    info.layoutVertically();
+    text(info, "Yr weather unavailable", 23, "f2f2f7", true);
+  }
+  // Rain goes in the header's spare height beside the 60 pt ring, which leaves room for 4 trams.
+  info.addSpacer(3);
+  const rainRow = info.addStack();
+  rainRow.centerAlignContent();
+  if (wet?.start) {
+    const umbrella = rainRow.addImage(SFSymbol.named("umbrella.fill").image);
+    umbrella.imageSize = new Size(14, 14);
+    umbrella.tintColor = new Color("7fb0dc");
+    rainRow.addSpacer(5);
+    text(rainRow, wet.start <= now ? "Rain now" : "Rain from " + clock(wet.start), 13, "7fb0dc", true);
+  } else text(rainRow, wet ? wet.message || "Dry next hour" : "Rain forecast unavailable", 12, "8e8e93");
   header.addSpacer();
   const freshness = header.addStack();
   freshness.centerAlignContent();
@@ -432,16 +448,6 @@ async function dashboard() {
   elapsed.font = Font.semiboldMonospacedSystemFont(17);
   elapsed.textColor = new Color(statusColor);
   w.addSpacer(6);
-  const rainRow = w.addStack();
-  rainRow.centerAlignContent();
-  if (wet?.start) {
-    const umbrella = rainRow.addImage(SFSymbol.named("umbrella.fill").image);
-    umbrella.imageSize = new Size(14, 14);
-    umbrella.tintColor = new Color("7fb0dc");
-    rainRow.addSpacer(5);
-    text(rainRow, wet.start <= now ? "Rain now" : "Rain from " + clock(wet.start), 13, "7fb0dc", true);
-  } else text(rainRow, wet ? wet.message || "Dry next hour" : "Rain forecast unavailable", 12, "8e8e93");
-  w.addSpacer(5);
   let event;
   if (sun) {
     event = nextLight(sun, now);
@@ -451,15 +457,15 @@ async function dashboard() {
     if (event) timer(row, event.date);
     // Today's dawn–dusk for each twilight; "—" when the sun does not sink that far (Dublin midsummer).
     const today = sun.days[0], at = value => value ? clock(new Date(value)) : "—";
-    w.addSpacer(4);
+    w.addSpacer(3);
     const twilight = w.addStack();
-    [["CIVIL", "civil"], ["NAUTICAL", "nautical"], ["ASTRONOMICAL", "astronomical"]].forEach(([name, kind], i) => {
+    twilight.centerAlignContent();
+    [["CIVIL", "civil"], ["NAUTICAL", "nautical"], ["ASTRO", "astronomical"]].forEach(([name, kind], i) => {
       if (i) twilight.addSpacer();
-      const column = twilight.addStack();
-      column.layoutVertically();
-      text(column, name, 8, "8e8e93", true);
+      text(twilight, name, 8, "8e8e93", true);
+      twilight.addSpacer(4);
       const begin = today[kind + "_twilight_begin"], end = today[kind + "_twilight_end"];
-      text(column, begin || end ? at(begin) + "–" + at(end) : "—", 12, "b7a17a", true);
+      text(twilight, begin || end ? at(begin) + "–" + at(end) : "—", 11, "b7a17a", true);
     });
   } else text(w, "Daylight unavailable", 13);
   w.addSpacer(8);

@@ -13,7 +13,7 @@
 A large iPhone widget for the free Scriptable app. Shows Yr weather for your location,
 a daylight countdown with today's civil, nautical and astronomical twilight times,
 today's qualifying direct Irish Rail trains,
-and up to 5 Parnell Green Line trams, each with a connecting Abbey Street
+and up to 4 Parnell Green Line trams, each with a connecting Abbey Street
 Red Line tram toward The Point or Connolly and an estimated arrival time at work.
 A rain line shows if rain is forecast at your location in the next hour.
 
