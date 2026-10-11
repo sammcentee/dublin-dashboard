@@ -129,7 +129,7 @@ function weatherSymbol(code) {
 /*
  * Dublin solar calculations adapted from SunCalc by Volodymyr Agafonkin.
  * https://github.com/mourner/suncalc/blob/ecb6bb0b0f3a5003298cfb536e46176117caf4e5/index.js
- * Only solar noon, sunrise/sunset and civil dawn/dusk are retained.
+ * Only solar noon, sunrise/sunset and civil, nautical and astronomical dawn/dusk are retained.
  * Coordinates are fixed to Dublin; delta-T approximation covers 2005–2050.
  *
  * Copyright (c) 2026, Volodymyr Agafonkin
@@ -156,7 +156,7 @@ function weatherSymbol(code) {
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 function sunDay(date) {
-  const { PI, sin, cos, asin, acos, atan2, round } = Math;
+  const { PI, sin, cos, asin, atan2, round } = Math;
   const rad = PI / 180, phi = 53.3498 * rad, lw = 6.2603 * rad;
   const wrap = a => a - 2 * PI * round(a / (2 * PI));
   const time = d => new Date((d + 10957.5) * 86400000).toISOString();
@@ -175,20 +175,28 @@ function sunDay(date) {
   const lon = 0.0009 + lw / (2 * PI);
   let noon = round(anchor - lon) + lon;
   for (let i = 0; i < 3; i++) noon -= wrap(sidereal(noon) - coords(noon).ra) / (2 * PI);
-  const declination = coords(noon).dec;
+  function altitude(d) {
+    const c = coords(d);
+    return asin(sin(phi) * sin(c.dec) + cos(phi) * cos(c.dec) * cos(sidereal(d) - c.ra));
+  }
+  // The sun climbs steadily from solar midnight to solar noon and sinks steadily after it,
+  // so bisect on the half-day before (sign -1) or after (sign 1) noon.
   function crossing(degrees, sign) {
     const target = degrees * rad;
-    let d = noon + sign * acos((sin(target) - sin(phi) * sin(declination)) / (cos(phi) * cos(declination))) / (2 * PI);
-    for (let i = 0; i < 2; i++) {
-      const c = coords(d), h = wrap(sidereal(d) - c.ra);
-      const altitude = asin(sin(phi) * sin(c.dec) + cos(phi) * cos(c.dec) * cos(h));
-      d += (altitude - target) / (2 * PI * cos(phi) * cos(c.dec) * sin(h));
+    let light = noon, dark = noon + sign / 2;
+    // On Dublin summer nights the sun never sinks 18° below the horizon: no astronomical dawn or dusk.
+    if (altitude(dark) > target) return null;
+    for (let i = 0; i < 30; i++) {
+      const middle = (light + dark) / 2;
+      if (altitude(middle) > target) light = middle; else dark = middle;
     }
-    return time(d);
+    return time((light + dark) / 2);
   }
   return {
     date, solar_noon: time(noon), sunrise: crossing(-0.833, -1), sunset: crossing(-0.833, 1),
-    civil_twilight_begin: crossing(-6, -1), civil_twilight_end: crossing(-6, 1)
+    civil_twilight_begin: crossing(-6, -1), civil_twilight_end: crossing(-6, 1),
+    nautical_twilight_begin: crossing(-12, -1), nautical_twilight_end: crossing(-12, 1),
+    astronomical_twilight_begin: crossing(-18, -1), astronomical_twilight_end: crossing(-18, 1)
   };
 }
 async function daylight(now) {
@@ -441,6 +449,18 @@ async function dashboard() {
     row.centerAlignContent();
     text(row, event ? event.name + " at " + clock(event.date) + " in  " : "Daylight unavailable", 13, "b7a17a");
     if (event) timer(row, event.date);
+    // Today's dawn–dusk for each twilight; "—" when the sun does not sink that far (Dublin midsummer).
+    const today = sun.days[0], at = value => value ? clock(new Date(value)) : "—";
+    w.addSpacer(4);
+    const twilight = w.addStack();
+    [["CIVIL", "civil"], ["NAUTICAL", "nautical"], ["ASTRONOMICAL", "astronomical"]].forEach(([name, kind], i) => {
+      if (i) twilight.addSpacer();
+      const column = twilight.addStack();
+      column.layoutVertically();
+      text(column, name, 8, "8e8e93", true);
+      const begin = today[kind + "_twilight_begin"], end = today[kind + "_twilight_end"];
+      text(column, begin || end ? at(begin) + "–" + at(end) : "—", 12, "b7a17a", true);
+    });
   } else text(w, "Daylight unavailable", 13);
   w.addSpacer(8);
   trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || []) : { message: "TFI timetable unavailable" });

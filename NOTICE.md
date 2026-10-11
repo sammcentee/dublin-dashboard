@@ -88,8 +88,8 @@ in the next hour. This is a model forecast, not a radar observation.
 The `sunDay` function in `dashboard.js` is adapted from
 [SunCalc by Volodymyr Agafonkin](https://github.com/mourner/suncalc), pinned to
 [source commit ecb6bb0](https://github.com/mourner/suncalc/tree/ecb6bb0b0f3a5003298cfb536e46176117caf4e5).
-Only solar coordinates, solar noon, sunrise/sunset and civil dawn/dusk are
-retained. Coordinates are fixed to Dublin, and the delta-T approximation covers
+Only solar coordinates, solar noon, sunrise/sunset and civil, nautical and
+astronomical dawn/dusk are retained. Coordinates are fixed to Dublin, and the delta-T approximation covers
 2005–2050. The [upstream BSD-2-Clause licence](https://github.com/mourner/suncalc/blob/ecb6bb0b0f3a5003298cfb536e46176117caf4e5/LICENSE)
 is reproduced below and also included in `dashboard.js` for standalone copies.
 
