@@ -377,7 +377,7 @@ function trainRow(w, label, result, showTrain = false) {
     if (result.delay) text(line, "  " + result.delay + " min late", 11, "ff9f0a", true);
     if (showTrain) text(w, dayLabel(result.departure) + " · " + (result.live ? "live" : "scheduled") + " · " + result.destination + " train · " + result.trainCode, 11, "8eafcf");
   }
-  w.addSpacer(5);
+  w.addSpacer(3);
 }
 async function dashboard() {
   const started = new Date(), place = await position();
@@ -447,7 +447,7 @@ async function dashboard() {
   elapsed.applyTimerStyle();
   elapsed.font = Font.semiboldMonospacedSystemFont(17);
   elapsed.textColor = new Color(statusColor);
-  w.addSpacer(6);
+  w.addSpacer(4);
   let event;
   if (sun) {
     event = nextLight(sun, now);
@@ -459,16 +459,16 @@ async function dashboard() {
     const today = sun.days[0], at = value => value ? clock(new Date(value)) : "—";
     w.addSpacer(3);
     const twilight = w.addStack();
-    twilight.centerAlignContent();
-    [["CIVIL", "civil"], ["NAUTICAL", "nautical"], ["ASTRO", "astronomical"]].forEach(([name, kind], i) => {
+    [["CIVIL", "civil"], ["NAUTICAL", "nautical"], ["ASTRONOMICAL", "astronomical"]].forEach(([name, kind], i) => {
       if (i) twilight.addSpacer();
-      text(twilight, name, 8, "8e8e93", true);
-      twilight.addSpacer(4);
+      const column = twilight.addStack();
+      column.layoutVertically();
+      text(column, name, 8, "8e8e93", true);
       const begin = today[kind + "_twilight_begin"], end = today[kind + "_twilight_end"];
-      text(twilight, begin || end ? at(begin) + "–" + at(end) : "—", 11, "b7a17a", true);
+      text(column, begin || end ? at(begin) + "–" + at(end) : "—", 12, "b7a17a", true);
     });
   } else text(w, "Daylight unavailable", 13);
-  w.addSpacer(8);
+  w.addSpacer(5);
   trainRow(w, "SALLINS → HEUSTON · after 22:00 · direct", rail ? nextTrain(rail.data, "sallinsHeuston", now, sallins || []) : { message: "TFI timetable unavailable" });
   trainRow(w, "CONNOLLY → SALLINS · after 18:00 · direct", rail ? nextTrain(rail.data, "connollySallins", now, connolly || []) : { message: "TFI timetable unavailable" }, true);
   const trips = connections(usableParnell, usableAbbey, now);
