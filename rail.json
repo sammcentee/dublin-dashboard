@@ -1,19 +1,19 @@
 {
   "source": "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip",
   "sourceInfoUrl": "https://www.transportforireland.ie/transitData/PT_Data.html",
-  "retrievedAt": "2026-10-17",
-  "feedVersion": "C0A5D124-8062-4333-81CF-75FC64B1D06F",
-  "feedStart": "20261016",
-  "feedEnd": "20271016",
-  "sourceLastModified": "Fri, 16 Oct 2026 22:22:44 GMT",
-  "sourceETag": "\"7c2e49-65dfc9a695500\"",
+  "retrievedAt": "2026-10-18",
+  "feedVersion": "A5AB1049-6484-43F8-B83C-033DF64F63BD",
+  "feedStart": "20261017",
+  "feedEnd": "20271017",
+  "sourceLastModified": "Sat, 17 Oct 2026 22:19:44 GMT",
+  "sourceETag": "\"7c0722-65e10ad862000\"",
   "timezone": "Europe/Dublin",
   "routes": {
     "sallinsHeuston": [
       {
         "departure": "22:11:00",
         "arrival": "22:46:00",
-        "serviceId": "277",
+        "serviceId": "274",
         "tripId": "5989_12059",
         "destination": "Dublin Heuston",
         "trainCode": "P227"
@@ -21,7 +21,7 @@
       {
         "departure": "22:29:00",
         "arrival": "22:52:00",
-        "serviceId": "272",
+        "serviceId": "269",
         "tripId": "5989_13502",
         "destination": "Dublin Heuston",
         "trainCode": "A531"
@@ -29,7 +29,7 @@
       {
         "departure": "23:09:00",
         "arrival": "23:42:00",
-        "serviceId": "272",
+        "serviceId": "269",
         "tripId": "5989_12078",
         "destination": "Dublin Heuston",
         "trainCode": "P229"
@@ -39,7 +39,7 @@
       {
         "departure": "18:32:00",
         "arrival": "19:23:00",
-        "serviceId": "254",
+        "serviceId": "251",
         "tripId": "5989_12231",
         "destination": "Newbridge",
         "trainCode": "D419"
@@ -47,24 +47,24 @@
     ]
   },
   "services": {
-    "254": {
-      "start": "20261015",
+    "251": {
+      "start": "20261016",
       "end": "20261211",
       "weekdays": "1111100",
       "exceptions": {
         "20261026": 2
       }
     },
-    "272": {
-      "start": "20261015",
+    "269": {
+      "start": "20261016",
       "end": "20261212",
       "weekdays": "1111110",
       "exceptions": {
         "20261026": 2
       }
     },
-    "277": {
-      "start": "20261015",
+    "274": {
+      "start": "20261016",
       "end": "20261212",
       "weekdays": "1111110",
       "exceptions": {}
@@ -72,5 +72,5 @@
   },
   "validThrough": "20261212",
   "attribution": "Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.",
-  "checkedAt": 1792269461661
+  "checkedAt": 1792298151777
 }
