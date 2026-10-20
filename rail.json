@@ -1,76 +1,139 @@
 {
   "source": "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip",
   "sourceInfoUrl": "https://www.transportforireland.ie/transitData/PT_Data.html",
-  "retrievedAt": "2026-10-19",
-  "feedVersion": "A5AB1049-6484-43F8-B83C-033DF64F63BD",
-  "feedStart": "20261017",
-  "feedEnd": "20271017",
-  "sourceLastModified": "Sun, 18 Oct 2026 22:18:23 GMT",
-  "sourceETag": "\"7ab2ed-65e24c68989c0\"",
+  "retrievedAt": "2026-10-20",
+  "feedVersion": "7F45B939-88CD-4972-AC8A-1992A136F855",
+  "feedStart": "20261019",
+  "feedEnd": "20271019",
+  "sourceLastModified": "Mon, 19 Oct 2026 22:20:58 GMT",
+  "sourceETag": "\"dcba09-65e38ed9e0680\"",
   "timezone": "Europe/Dublin",
   "routes": {
     "sallinsHeuston": [
       {
         "departure": "22:11:00",
         "arrival": "22:46:00",
-        "serviceId": "274",
+        "serviceId": "126",
         "tripId": "5989_12059",
+        "destination": "Dublin Heuston",
+        "trainCode": "P227"
+      },
+      {
+        "departure": "22:11:00",
+        "arrival": "22:46:00",
+        "serviceId": "338",
+        "tripId": "6001_12332",
         "destination": "Dublin Heuston",
         "trainCode": "P227"
       },
       {
         "departure": "22:29:00",
         "arrival": "22:52:00",
-        "serviceId": "269",
+        "serviceId": "126",
         "tripId": "5989_13502",
         "destination": "Dublin Heuston",
         "trainCode": "A531"
       },
       {
+        "departure": "22:29:00",
+        "arrival": "22:52:00",
+        "serviceId": "355",
+        "tripId": "6001_13844",
+        "destination": "Dublin Heuston",
+        "trainCode": "A531"
+      },
+      {
+        "departure": "23:00:00",
+        "arrival": "24:05:00",
+        "serviceId": "283",
+        "tripId": "6001_12341",
+        "destination": "Dublin Heuston",
+        "trainCode": "BUS372"
+      },
+      {
         "departure": "23:09:00",
         "arrival": "23:42:00",
-        "serviceId": "269",
+        "serviceId": "126",
         "tripId": "5989_12078",
         "destination": "Dublin Heuston",
         "trainCode": "P229"
+      },
+      {
+        "departure": "23:09:00",
+        "arrival": "23:42:00",
+        "serviceId": "355",
+        "tripId": "6001_12353",
+        "destination": "Dublin Heuston",
+        "trainCode": "P229"
+      },
+      {
+        "departure": "24:00:00",
+        "arrival": "25:05:00",
+        "serviceId": "283",
+        "tripId": "6001_12362",
+        "destination": "Dublin Heuston",
+        "trainCode": "BUS373"
       }
     ],
     "connollySallins": [
       {
         "departure": "18:32:00",
         "arrival": "19:23:00",
-        "serviceId": "251",
+        "serviceId": "126",
         "tripId": "5989_12231",
+        "destination": "Newbridge",
+        "trainCode": "D419"
+      },
+      {
+        "departure": "18:32:00",
+        "arrival": "19:23:00",
+        "serviceId": "309",
+        "tripId": "6001_12534",
         "destination": "Newbridge",
         "trainCode": "D419"
       }
     ]
   },
   "services": {
-    "251": {
-      "start": "20261016",
+    "126": {
+      "start": "20261019",
+      "end": "20261019",
+      "weekdays": "1000000",
+      "exceptions": {}
+    },
+    "283": {
+      "start": "20261031",
+      "end": "20261031",
+      "weekdays": "0000010",
+      "exceptions": {}
+    },
+    "309": {
+      "start": "20261020",
       "end": "20261211",
       "weekdays": "1111100",
       "exceptions": {
         "20261026": 2
       }
     },
-    "269": {
-      "start": "20261016",
+    "338": {
+      "start": "20261020",
       "end": "20261212",
       "weekdays": "1111110",
       "exceptions": {
-        "20261026": 2
+        "20261031": 2
       }
     },
-    "274": {
-      "start": "20261016",
+    "355": {
+      "start": "20261020",
       "end": "20261212",
       "weekdays": "1111110",
-      "exceptions": {}
+      "exceptions": {
+        "20261026": 2,
+        "20261031": 2
+      }
     }
   },
   "validThrough": "20261212",
   "attribution": "Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.",
-  "checkedAt": 1792448533005
+  "checkedAt": 1792471977799
 }
