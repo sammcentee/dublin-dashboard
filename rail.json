@@ -1,27 +1,19 @@
 {
   "source": "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip",
   "sourceInfoUrl": "https://www.transportforireland.ie/transitData/PT_Data.html",
-  "retrievedAt": "2026-10-21",
-  "feedVersion": "7F45B939-88CD-4972-AC8A-1992A136F855",
-  "feedStart": "20261019",
-  "feedEnd": "20271019",
-  "sourceLastModified": "Tue, 20 Oct 2026 22:20:14 GMT",
-  "sourceETag": "\"ddfc0d-65e4d08d60380\"",
+  "retrievedAt": "2026-10-22",
+  "feedVersion": "B814D2D3-40DE-45AE-8C0E-E9545EF817C4",
+  "feedStart": "20261021",
+  "feedEnd": "20271021",
+  "sourceLastModified": "Wed, 21 Oct 2026 22:21:33 GMT",
+  "sourceETag": "\"961d5e-65e612b62d540\"",
   "timezone": "Europe/Dublin",
   "routes": {
     "sallinsHeuston": [
       {
         "departure": "22:11:00",
         "arrival": "22:46:00",
-        "serviceId": "126",
-        "tripId": "5989_12059",
-        "destination": "Dublin Heuston",
-        "trainCode": "P227"
-      },
-      {
-        "departure": "22:11:00",
-        "arrival": "22:46:00",
-        "serviceId": "338",
+        "serviceId": "323",
         "tripId": "6001_12332",
         "destination": "Dublin Heuston",
         "trainCode": "P227"
@@ -29,15 +21,7 @@
       {
         "departure": "22:29:00",
         "arrival": "22:52:00",
-        "serviceId": "126",
-        "tripId": "5989_13502",
-        "destination": "Dublin Heuston",
-        "trainCode": "A531"
-      },
-      {
-        "departure": "22:29:00",
-        "arrival": "22:52:00",
-        "serviceId": "355",
+        "serviceId": "339",
         "tripId": "6001_13844",
         "destination": "Dublin Heuston",
         "trainCode": "A531"
@@ -45,7 +29,7 @@
       {
         "departure": "23:00:00",
         "arrival": "24:05:00",
-        "serviceId": "283",
+        "serviceId": "274",
         "tripId": "6001_12341",
         "destination": "Dublin Heuston",
         "trainCode": "BUS372"
@@ -53,15 +37,7 @@
       {
         "departure": "23:09:00",
         "arrival": "23:42:00",
-        "serviceId": "126",
-        "tripId": "5989_12078",
-        "destination": "Dublin Heuston",
-        "trainCode": "P229"
-      },
-      {
-        "departure": "23:09:00",
-        "arrival": "23:42:00",
-        "serviceId": "355",
+        "serviceId": "339",
         "tripId": "6001_12353",
         "destination": "Dublin Heuston",
         "trainCode": "P229"
@@ -69,7 +45,7 @@
       {
         "departure": "24:00:00",
         "arrival": "25:05:00",
-        "serviceId": "283",
+        "serviceId": "274",
         "tripId": "6001_12362",
         "destination": "Dublin Heuston",
         "trainCode": "BUS373"
@@ -79,15 +55,7 @@
       {
         "departure": "18:32:00",
         "arrival": "19:23:00",
-        "serviceId": "126",
-        "tripId": "5989_12231",
-        "destination": "Newbridge",
-        "trainCode": "D419"
-      },
-      {
-        "departure": "18:32:00",
-        "arrival": "19:23:00",
-        "serviceId": "309",
+        "serviceId": "297",
         "tripId": "6001_12534",
         "destination": "Newbridge",
         "trainCode": "D419"
@@ -95,19 +63,13 @@
     ]
   },
   "services": {
-    "126": {
-      "start": "20261019",
-      "end": "20261019",
-      "weekdays": "1000000",
-      "exceptions": {}
-    },
-    "283": {
+    "274": {
       "start": "20261031",
       "end": "20261031",
       "weekdays": "0000010",
       "exceptions": {}
     },
-    "309": {
+    "297": {
       "start": "20261020",
       "end": "20261211",
       "weekdays": "1111100",
@@ -115,7 +77,7 @@
         "20261026": 2
       }
     },
-    "338": {
+    "323": {
       "start": "20261020",
       "end": "20261212",
       "weekdays": "1111110",
@@ -123,7 +85,7 @@
         "20261031": 2
       }
     },
-    "355": {
+    "339": {
       "start": "20261020",
       "end": "20261212",
       "weekdays": "1111110",
@@ -135,5 +97,5 @@
   },
   "validThrough": "20261212",
   "attribution": "Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.",
-  "checkedAt": 1792558194564
+  "checkedAt": 1792670081430
 }
