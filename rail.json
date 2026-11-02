@@ -1,19 +1,19 @@
 {
   "source": "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip",
   "sourceInfoUrl": "https://www.transportforireland.ie/transitData/PT_Data.html",
-  "retrievedAt": "2026-11-01",
-  "feedVersion": "DE0E4D53-0CE1-4949-9B89-4A2C0FCCA740",
-  "feedStart": "20261030",
-  "feedEnd": "20271030",
-  "sourceLastModified": "Sat, 31 Oct 2026 23:21:40 GMT",
-  "sourceETag": "\"7d6e39-65f2b2ccb0900\"",
+  "retrievedAt": "2026-11-02",
+  "feedVersion": "D18DCB93-3AE9-4EAC-BA2C-2D5DEA0F6437",
+  "feedStart": "20261031",
+  "feedEnd": "20271031",
+  "sourceLastModified": "Sun, 01 Nov 2026 23:17:26 GMT",
+  "sourceETag": "\"7cf18b-65f3f3b7ead80\"",
   "timezone": "Europe/Dublin",
   "routes": {
     "sallinsHeuston": [
       {
         "departure": "22:11:00",
         "arrival": "22:46:00",
-        "serviceId": "296",
+        "serviceId": "289",
         "tripId": "6017_12419",
         "destination": "Dublin Heuston",
         "trainCode": "P227"
@@ -21,7 +21,7 @@
       {
         "departure": "22:29:00",
         "arrival": "22:52:00",
-        "serviceId": "296",
+        "serviceId": "289",
         "tripId": "6017_13936",
         "destination": "Dublin Heuston",
         "trainCode": "A531"
@@ -29,7 +29,7 @@
       {
         "departure": "23:00:00",
         "arrival": "24:05:00",
-        "serviceId": "54",
+        "serviceId": "53",
         "tripId": "6017_12428",
         "destination": "Dublin Heuston",
         "trainCode": "BUS372"
@@ -37,7 +37,7 @@
       {
         "departure": "23:09:00",
         "arrival": "23:42:00",
-        "serviceId": "296",
+        "serviceId": "289",
         "tripId": "6017_12441",
         "destination": "Dublin Heuston",
         "trainCode": "P229"
@@ -45,7 +45,7 @@
       {
         "departure": "24:00:00",
         "arrival": "25:05:00",
-        "serviceId": "54",
+        "serviceId": "53",
         "tripId": "6017_12450",
         "destination": "Dublin Heuston",
         "trainCode": "BUS373"
@@ -55,7 +55,7 @@
       {
         "departure": "18:32:00",
         "arrival": "19:23:00",
-        "serviceId": "76",
+        "serviceId": "74",
         "tripId": "6017_12622",
         "destination": "Newbridge",
         "trainCode": "D419"
@@ -63,20 +63,20 @@
     ]
   },
   "services": {
-    "54": {
+    "53": {
       "start": "20261031",
       "end": "20261031",
       "weekdays": "0000010",
       "exceptions": {}
     },
-    "76": {
-      "start": "20261029",
+    "74": {
+      "start": "20261030",
       "end": "20261211",
       "weekdays": "1111100",
       "exceptions": {}
     },
-    "296": {
-      "start": "20261029",
+    "289": {
+      "start": "20261030",
       "end": "20261212",
       "weekdays": "1111110",
       "exceptions": {
@@ -86,5 +86,5 @@
   },
   "validThrough": "20261212",
   "attribution": "Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.",
-  "checkedAt": 1793570585415
+  "checkedAt": 1793599580948
 }
