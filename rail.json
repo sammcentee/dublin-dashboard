@@ -1,7 +1,7 @@
 {
   "source": "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip",
   "sourceInfoUrl": "https://www.transportforireland.ie/transitData/PT_Data.html",
-  "retrievedAt": "2026-11-09",
+  "retrievedAt": "2026-11-10",
   "feedVersion": "9A93B55E-2F70-4A57-B06C-9D94C008E637",
   "feedStart": "20261108",
   "feedEnd": "20271108",
@@ -62,5 +62,5 @@
   },
   "validThrough": "20261212",
   "attribution": "Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.",
-  "checkedAt": 1794262982828
+  "checkedAt": 1794295199153
 }
