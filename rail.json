@@ -1,19 +1,19 @@
 {
   "source": "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip",
   "sourceInfoUrl": "https://www.transportforireland.ie/transitData/PT_Data.html",
-  "retrievedAt": "2026-11-10",
-  "feedVersion": "004489B2-5466-4178-A364-74CF402C2D0E",
-  "feedStart": "20261109",
-  "feedEnd": "20271109",
-  "sourceLastModified": "Tue, 10 Nov 2026 12:14:29 GMT",
-  "sourceETag": "\"687238-65feb052c3340\"",
+  "retrievedAt": "2026-11-11",
+  "feedVersion": "924629DB-7A2F-4D39-B0EE-92FDCF6D0D0A",
+  "feedStart": "20261110",
+  "feedEnd": "20271110",
+  "sourceLastModified": "Tue, 10 Nov 2026 23:06:21 GMT",
+  "sourceETag": "\"68daf4-65ff4206df540\"",
   "timezone": "Europe/Dublin",
   "routes": {
     "sallinsHeuston": [
       {
         "departure": "22:11:00",
         "arrival": "22:46:00",
-        "serviceId": "230",
+        "serviceId": "229",
         "tripId": "6037_12504",
         "destination": "Dublin Heuston",
         "trainCode": "P227"
@@ -21,7 +21,7 @@
       {
         "departure": "22:29:00",
         "arrival": "22:52:00",
-        "serviceId": "230",
+        "serviceId": "229",
         "tripId": "6037_14024",
         "destination": "Dublin Heuston",
         "trainCode": "A531"
@@ -29,7 +29,7 @@
       {
         "departure": "23:09:00",
         "arrival": "23:42:00",
-        "serviceId": "230",
+        "serviceId": "229",
         "tripId": "6037_12527",
         "destination": "Dublin Heuston",
         "trainCode": "P229"
@@ -53,7 +53,7 @@
       "weekdays": "1111100",
       "exceptions": {}
     },
-    "230": {
+    "229": {
       "start": "20261110",
       "end": "20261212",
       "weekdays": "1111110",
@@ -62,5 +62,5 @@
   },
   "validThrough": "20261212",
   "attribution": "Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.",
-  "checkedAt": 1794339865696
+  "checkedAt": 1794378217305
 }
