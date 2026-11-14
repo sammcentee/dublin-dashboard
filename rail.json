@@ -1,19 +1,19 @@
 {
   "source": "https://www.transportforireland.ie/transitData/Data/GTFS_Irish_Rail.zip",
   "sourceInfoUrl": "https://www.transportforireland.ie/transitData/PT_Data.html",
-  "retrievedAt": "2026-11-13",
-  "feedVersion": "DD38A947-0CBC-44AB-B860-F0D03C7E1B28",
-  "feedStart": "20261112",
-  "feedEnd": "20271112",
-  "sourceLastModified": "Thu, 12 Nov 2026 23:11:17 GMT",
-  "sourceETag": "\"68b862-6601c6dc14f40\"",
+  "retrievedAt": "2026-11-14",
+  "feedVersion": "330A1184-97B4-4A9F-B82F-E5B18F9CFFF7",
+  "feedStart": "20261113",
+  "feedEnd": "20271113",
+  "sourceLastModified": "Fri, 13 Nov 2026 23:19:01 GMT",
+  "sourceETag": "\"691212-66030a740c340\"",
   "timezone": "Europe/Dublin",
   "routes": {
     "sallinsHeuston": [
       {
         "departure": "22:11:00",
         "arrival": "22:46:00",
-        "serviceId": "223",
+        "serviceId": "175",
         "tripId": "6037_12504",
         "destination": "Dublin Heuston",
         "trainCode": "P227"
@@ -21,7 +21,7 @@
       {
         "departure": "22:29:00",
         "arrival": "22:52:00",
-        "serviceId": "223",
+        "serviceId": "175",
         "tripId": "6037_14024",
         "destination": "Dublin Heuston",
         "trainCode": "A531"
@@ -29,7 +29,7 @@
       {
         "departure": "23:09:00",
         "arrival": "23:42:00",
-        "serviceId": "223",
+        "serviceId": "175",
         "tripId": "6037_12527",
         "destination": "Dublin Heuston",
         "trainCode": "P229"
@@ -48,13 +48,13 @@
   },
   "services": {
     "69": {
-      "start": "20261111",
+      "start": "20261112",
       "end": "20261211",
       "weekdays": "1111100",
       "exceptions": {}
     },
-    "223": {
-      "start": "20261111",
+    "175": {
+      "start": "20261112",
       "end": "20261212",
       "weekdays": "1111110",
       "exceptions": {}
@@ -62,5 +62,5 @@
   },
   "validThrough": "20261212",
   "attribution": "Timetable data: National Transport Authority, CC BY 4.0. Timetable snapshot; not a live service guarantee.",
-  "checkedAt": 1794598982177
+  "checkedAt": 1794637499241
 }
